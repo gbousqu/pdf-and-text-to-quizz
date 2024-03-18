@@ -169,8 +169,9 @@ if st.session_state.get('editing', False):
                         break
 
                 # Sauvegarder les prompts dans le fichier JSON
-                with open('prompts.json', 'w') as f:
-                    json.dump(data, f)
+                # désactivé temporairement pour le déploiement streamlit
+                # with open('prompts.json', 'w') as f:
+                #     json.dump(data, f)
                 
                 print("mise à jour de selected_prompt")
                 # Mettre à jour le prompt sélectionné
