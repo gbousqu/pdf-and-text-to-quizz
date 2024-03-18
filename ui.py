@@ -347,6 +347,7 @@ if ('questions' in st.session_state):
                 file_name = file_name[:-4]
 
            #sauvegarde des questions au format json
+        # désactivé pour le déploiement streamlit
             with open(f"data/quiz-{file_name}-{date_suffix}.json", "w", encoding='latin-1', errors='ignore') as f:
                 str = json.dumps(json_questions)
                 f.write(str)
