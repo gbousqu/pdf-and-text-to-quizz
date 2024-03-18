@@ -1,6 +1,7 @@
 from qcm_chain import QCMGenerateChain
 from qa_llm import QaLlm
 import asyncio
+import streamlit as st
 
 async def llm_call(qa_chain: QCMGenerateChain, text: str):
     
@@ -14,9 +15,11 @@ async def generate_quizz(content:str):
     """
     Generates a quizz from the given content.
     """
+    num_questions_per_page = st.session_state["num_questions_per_page"]
+   
     qa_llm = QaLlm()
     qa_chain = QCMGenerateChain.from_llm(qa_llm.get_llm())
 
-    return await llm_call(qa_chain, [{"doc": content}])
+    return await llm_call(qa_chain, [{"doc": content, "num_questions_per_page": num_questions_per_page}])
 
     

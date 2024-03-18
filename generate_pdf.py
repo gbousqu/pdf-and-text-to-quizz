@@ -12,7 +12,8 @@ class PDF(FPDF):
         self.set_font("Arial", "I", 8)
         page_number = f"Page {self.page_no()}"
         self.cell(0, 10, page_number, align="C")
-
+        
+#création du pdf des questions
 def generate_questions(data, pdf: PDF, print_response:  bool = False):
     pdf.add_page()
     pdf.add_font('DejaVu', '', 'DejaVuSansCondensed.ttf', uni=True)
@@ -70,7 +71,7 @@ def generate_pdf(filename , json_data):
 
 def generate_pdf_quiz(file_name, json_data):
 
-    # remove extension .pdf from file name
+    # remove extension  from file name
     if file_name.endswith(".json"):
         file_name = file_name[:-5]
 

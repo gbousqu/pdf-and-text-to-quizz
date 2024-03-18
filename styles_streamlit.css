@@ -1,0 +1,13 @@
+div.prompt {
+  background-color: rgb(73, 73, 73);
+  padding: 10px;
+  margin-bottom: 20px;
+}
+div.prompt,
+div.prompt p {
+  font-size: 12px;
+}
+
+textarea {
+  min-height: 20px !important;
+}
