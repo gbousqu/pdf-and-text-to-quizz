@@ -348,9 +348,9 @@ if ('questions' in st.session_state):
 
            #sauvegarde des questions au format json
         # désactivé pour le déploiement streamlit
-            with open(f"data/quiz-{file_name}-{date_suffix}.json", "w", encoding='latin-1', errors='ignore') as f:
-                str = json.dumps(json_questions)
-                f.write(str)
+            # with open(f"data/quiz-{file_name}-{date_suffix}.json", "w", encoding='latin-1', errors='ignore') as f:
+            #     str = json.dumps(json_questions)
+            #     f.write(str)
 
            #génération d'un pdf avec questions et réponses (pour l'instant on se passe de cette option)
             # generate_pdf_quiz(f"data/quiz-{file_name}-{date_suffix}.json", json_questions)
