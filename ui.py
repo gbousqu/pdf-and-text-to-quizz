@@ -10,10 +10,7 @@ from datetime import datetime
 import json
 import streamlit as st
 
-# Get OpenAI API key
-# openai_api_key = "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"
 
-# os.environ['OPENAI_API_KEY'] = "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"
 
 openai_api_key = st.text_input("Entrez votre clé OpenAI", type="password")
 os.environ['OPENAI_API_KEY'] = openai_api_key
