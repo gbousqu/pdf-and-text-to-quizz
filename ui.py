@@ -24,7 +24,6 @@ else:
         secret_data = json.load(f)
 
 
-
 # Définir le nom d'hôte en fonction de l'environnement
 if is_streamlit_sharing:
     hostname = 'webpedago.u-bourgogne.fr'
@@ -65,10 +64,6 @@ else:
     st.markdown('[Obtenir une clé API OpenAI](https://platform.openai.com/api-keys)', unsafe_allow_html=True)
     openai_api_key = st.text_input("Entrez votre clé OpenAI", type="password")
     os.environ['OPENAI_API_KEY'] = openai_api_key
-
-    # openai_api_key = os.getenv('OPENAI_API_KEY')
-    # st.write("OPENAI_API_KEY: ", openai_api_key)
-
 
     # Lire le contenu du fichier CSS
     with open('styles_streamlit.css', 'r') as f:
