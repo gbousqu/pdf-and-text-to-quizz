@@ -71,6 +71,7 @@ else:
     hostname = st.session_state['hostname']
 
     st.write("username: ", db_username)
+    st.write("db_username: ", db_username)
     st.write("db_password: ", db_password)
     st.write("db_database: ", db_database)
     st.write("hostname: ", hostname)
