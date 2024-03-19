@@ -3,6 +3,7 @@ backup
 secret.json
 pdf-to-quizz-master.code-workspace
 .streamlit
+test-big-query-janv-2019-b5e01a71ad8e.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -10,28 +10,29 @@ import json
 import streamlit as st
 from datetime import datetime
 import mysql.connector
+from google.cloud import bigquery
+from google.oauth2 import service_account
+
+if "bigquery_client" not in st.session_state:
+    credentials = service_account.Credentials.from_service_account_file("test-big-query-janv-2019-b5e01a71ad8e.json")
+    st.session_state.bigquery_client = bigquery.Client(credentials=credentials)
+
+client = st.session_state.bigquery_client
 
 # Déterminer si l'application est en cours d'exécution sur Streamlit Sharing
 is_streamlit_sharing = st.secrets.get("is_streamlit_sharing", False)
 
-st.write("is_streamlit_sharing:", is_streamlit_sharing)
+json_string = st.secrets["secret_json"].replace('\\\\', '\\')
+secret_data = json.loads(json_string)
 
-secret_db_password=st.secrets.get("db_password")
-st.write("secret_db_password:", secret_db_password)
-
-if 'db_password' not in st.session_state:
-    st.write("db_password pas encore défini")
-else:
-    st.write("db_password:",st.session_state['db_password'])
-
-if is_streamlit_sharing:
-    # Si l'application est en cours d'exécution sur Streamlit Sharing,
-    json_string = st.secrets["secret_json"].replace('\\\\', '\\')
-    secret_data = json.loads(json_string)
-else:        
-    # Charger les données de connexion à partir du fichier secret.json
-    with open('secret.json', 'r') as f:
-        secret_data = json.load(f)
+# if is_streamlit_sharing:
+#     # Si l'application est en cours d'exécution sur Streamlit Sharing,
+#     json_string = st.secrets["secret_json"].replace('\\\\', '\\')
+#     secret_data = json.loads(json_string)
+# else:        
+#     # Charger les données de connexion à partir du fichier secret.json
+#     with open('secret.json', 'r') as f:
+#         secret_data = json.load(f)
 
 
 # Si l'utilisateur n'est pas encore connecté
@@ -49,25 +50,8 @@ if not st.session_state.get('logged_in', False):
                 # Vérifier si le nom d'utilisateur et le mot de passe sont corrects
                 if username == data['name'] and password == data['pw']:
                     # Si c'est le cas, définir 'logged_in' à True dans l'état de session
-                    # Définir le nom d'hôte en fonction de l'environnement
-                    if is_streamlit_sharing:
-                        hostname = st.secrets['db_hostname']
-                        db_database = st.secrets['db_database']
-                        db_username = st.secrets['db_username']
-                        db_password = st.secrets['db_password']
-                        st.write('db_password ! :', db_password)
-                    else:
-                        hostname = 'localhost'
-                        db_database = 'qcm'
-                        db_username = username
-                        db_password = password
-
                     st.session_state['username'] = username
                     st.session_state['logged_in'] = True
-                    st.session_state['db_username'] = db_username
-                    st.session_state['db_password'] = db_password
-                    st.session_state['db_database'] = db_database
-                    st.session_state['hostname'] = hostname
                     st.experimental_rerun()
             if st.session_state.get('logged_in', False) == False:
                 # Si aucune correspondance n'a été trouvée, afficher un message d'erreur
@@ -75,19 +59,6 @@ if not st.session_state.get('logged_in', False):
 else:
 
     username = st.session_state['username']
-    db_username = st.session_state['db_username']
-    db_password = st.session_state['db_password']
-    db_database = st.session_state['db_database']
-    hostname = st.session_state['hostname']
-
-    st.write("username: ", db_username)
-    st.write("db_username: ", db_username)
-    st.write("db_password: ", db_password)
-    st.write("db_database: ", db_database)
-    st.write("hostname: ", hostname)
-
-
-    
 
     st.markdown('[Obtenir une clé API OpenAI](https://platform.openai.com/api-keys)', unsafe_allow_html=True)
     openai_api_key = st.text_input("Entrez votre clé OpenAI", type="password")
@@ -169,36 +140,10 @@ else:
 
     st.subheader("Choisir un contexte")
 
-    st.write("db_username: ", db_username)
-    st.write("db_password: ", db_password)
-    st.write("db_database: ", db_database)
-    st.write("hostname: ", hostname)
-
-    # Créer une connexion à la base de données
-    cnx = mysql.connector.connect(user=db_username, password=db_password,
-                                host=hostname,
-                                database=db_database)
-    
-    st.write("Connexion à la base de données réussie")
-
-    # Créer un curseur pour exécuter des requêtes SQL
-    cursor = cnx.cursor()
-
     # Exécuter la requête pour récupérer les données de la table qcm_prompts_openai
     #on ne récupère que les lignes qui ont été créées par l'utilisateur connecté ou les lignes qui n'ont pas de user
-    query = "SELECT name, content, user FROM qcm_prompts_openai WHERE user='"+ username +"' OR user=''"
-    cursor.execute(query)
-
-    # Récupérer les données de la table
-    # chaque ligne de data est un tableau composé de deux éléments: le nom du prompt et son contenu
-    data = cursor.fetchall()
-    
-    # Fermer le curseur et la connexion à la base de données
-    # cursor.close()
-    # cnx.close()
-
-    # with open('prompts.json', 'r') as f:
-    #     data = json.load(f)
+    query = "SELECT name, content, user FROM qcm.qcm_prompts_openai WHERE user='"+ username +"' OR user=''"
+    data = list(client.query(query).result())
 
     # Créer une liste des noms des prompts
     prompt_names = [prompt[0] for prompt in data]
@@ -281,14 +226,20 @@ else:
                         #     json.dump(data, f)
                             
                         # Mettre à jour la table
-                        cursor.execute("""
-                        UPDATE qcm_prompts_openai 
-                        SET name = %s, content = %s 
-                        WHERE name = %s AND user = %s
-                        """, (new_prompt_name, new_prompt_content, selected_prompt_name, username))
-
-                        # Valider les modifications
-                        cnx.commit()   
+                        query = """
+                            UPDATE `pix.qcm_prompts_openai`
+                            SET name = @new_prompt_name, content = @new_prompt_content
+                            WHERE name = @selected_prompt_name AND user = @username
+                        """
+                        params = [
+                            bigquery.ScalarQueryParameter('new_prompt_name', 'STRING', new_prompt_name),
+                            bigquery.ScalarQueryParameter('new_prompt_content', 'STRING', new_prompt_content),
+                            bigquery.ScalarQueryParameter('selected_prompt_name', 'STRING', selected_prompt_name),
+                            bigquery.ScalarQueryParameter('username', 'STRING', username),
+                        ]
+                        job_config = bigquery.QueryJobConfig()
+                        job_config.query_parameters = params
+                        client.query(query, job_config=job_config)
 
                         
                         print("mise à jour de selected_prompt")
@@ -312,12 +263,17 @@ else:
     if st.session_state.get('confirm_delete', False): # (false : valeur par défaut)
         confirm = st.checkbox('Confirmer la suppression', key='confirm_delete_checkbox')
         if confirm:
-
-            # Supprimer le prompt de la base de données
-            cursor.execute("""
-            DELETE FROM qcm_prompts_openai
-            WHERE name = %s AND user = %s
-            """, (selected_prompt_name, username))
+            query = """
+                DELETE FROM `test-big-query-janv-2019.pix.qcm_prompts_openai`
+                WHERE name = @selected_prompt_name AND user = @username
+            """
+            params = [
+                bigquery.ScalarQueryParameter('selected_prompt_name', 'STRING', selected_prompt_name),
+                bigquery.ScalarQueryParameter('username', 'STRING', username),
+            ]
+            job_config = bigquery.QueryJobConfig()
+            job_config.query_parameters = params
+            client.query(query, job_config=job_config)
 
 
 
@@ -374,8 +330,18 @@ else:
                 # print(new_prompt_name)
 
                 # Vérifier si une entrée avec le même name et user existe déjà
-                cursor.execute("SELECT * FROM qcm_prompts_openai WHERE name = %s AND user = %s", (new_prompt_name, username))
-                existing_entry = cursor.fetchone()
+                query = """
+                    SELECT * FROM `test-big-query-janv-2019.pix.qcm_prompts_openai`
+                    WHERE name = @new_prompt_name AND user = @username
+                """
+                params = [
+                    bigquery.ScalarQueryParameter('new_prompt_name', 'STRING', new_prompt_name),
+                    bigquery.ScalarQueryParameter('username', 'STRING', username),
+                ]
+                job_config = bigquery.QueryJobConfig()
+                job_config.query_parameters = params
+                results = client.query(query, job_config=job_config)
+                existing_entry = results.result().fetchone()
 
                 if new_prompt_name.strip() and new_prompt_content.strip() and not existing_entry:
                 
@@ -386,11 +352,18 @@ else:
                     # with open('prompts.json', 'w') as f:
                     #     json.dump(data, f)
 
-                    # Insérer la nouvelle entrée dans la table
-                    cursor.execute("INSERT INTO qcm_prompts_openai (name, content, user) VALUES (%s, %s, %s)", (new_prompt_name, new_prompt_content, username))
-
-                    # Valider les modifications
-                    cnx.commit()
+                    query = """
+                        INSERT INTO `test-big-query-janv-2019.pix.qcm_prompts_openai` (name, content, user)
+                        VALUES (@new_prompt_name, @new_prompt_content, @username)
+                    """
+                    params = [
+                        bigquery.ScalarQueryParameter('new_prompt_name', 'STRING', new_prompt_name),
+                        bigquery.ScalarQueryParameter('new_prompt_content', 'STRING', new_prompt_content),
+                        bigquery.ScalarQueryParameter('username', 'STRING', username),
+                    ]
+                    job_config = bigquery.QueryJobConfig()
+                    job_config.query_parameters = params
+                    client.query(query, job_config=job_config)
 
                     st.session_state['form_new_prompt'] = False
                     st.experimental_rerun() #forcr le rechargement de la page pour masquer le formulaire de création de prompt
@@ -559,12 +532,6 @@ else:
                                 query = f"INSERT INTO questions (image,qti, date_creation, date_modification) VALUES ('','{qti}', '{now}', '{now}');"
                                 queries.append(query)
 
-                        # # Afficher les requêtes SQL dans une textarea
-                        # st.text_area("SQL Queries", "\n".join(queries))
+                        # Afficher les requêtes SQL dans une textarea
+                        st.text_area("SQL Queries", "\n".join(queries))
                                 
-                                # Exécuter les requêtes SQL
-                        for query in queries:
-                            cursor.execute(query)
-
-                        # Valider les modifications
-                        cnx.commit()
