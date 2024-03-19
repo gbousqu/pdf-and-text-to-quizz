@@ -40,6 +40,9 @@ if not st.session_state.get('logged_in', False):
             if username == data['name'] and password == data['pw']:
                 # Si c'est le cas, définir 'logged_in' à True dans l'état de session
                 # Définir le nom d'hôte en fonction de l'environnement
+
+                st.write("is_streamlit_sharing:", is_streamlit_sharing)
+                
                 if is_streamlit_sharing:
                     hostname = st.secrets['db_hostname']
                     db_database = st.secrets['db_database']
