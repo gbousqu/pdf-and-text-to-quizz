@@ -361,7 +361,7 @@ if ('questions' in st.session_state):
             num_charac_per_line = 90 # Adjust this value to change the number of characters per line
             with st.form(key='edit_quiz'):
                 for i, question_data in enumerate(json_questions):
-                    st.checkbox(f"Sélectionner cette question", key=f"checkbox_{i+1}")
+                    st.checkbox(f"Sélectionner cette question", key=f"checkbox_{i+1}",value=True)
                     num_lines_question = len(question_data["question"]) // num_charac_per_line + 1
                     st.text_area(f"Question {i+1}", question_data["question"], key=f"question_{i+1}", height=num_lines_question*line_height)
                     

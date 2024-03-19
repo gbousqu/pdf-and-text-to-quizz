@@ -1,6 +1,6 @@
 #dossiers et fichiers écartés du repository en ligne
 backup
-secret.txt
+secret.json
 pdf-to-quizz-master.code-workspace
 
 # Byte-compiled / optimized / DLL files
