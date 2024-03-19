@@ -49,6 +49,7 @@ if not st.session_state.get('logged_in', False):
                     db_database = st.secrets['db_database']
                     db_username = st.secrets['db_username']
                     db_password = st.secrets['db_password']
+                    st.write('db_password ! :', db_password)
                 else:
                     hostname = 'localhost'
                     db_database = 'qcm'
