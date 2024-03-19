@@ -9,6 +9,7 @@ import os
 from datetime import datetime
 import json
 import streamlit as st
+from datetime import datetime
 
 
 
@@ -354,19 +355,8 @@ if ('questions' in st.session_state):
            #génération d'un pdf avec questions et réponses (pour l'instant on se passe de cette option)
             # generate_pdf_quiz(f"data/quiz-{file_name}-{date_suffix}.json", json_questions)
             
-            st.write("Quiz généré avec succès! (sauvegarde json dans le dossier data)")        
+            st.write("Quiz généré avec succès! (sauvegarde json dans le dossier data)")     
 
-        #     quiz_text = generate_text_quiz(json_questions)
-            
-        #    # Split the text into lines
-        #     lines = quiz_text.split('\n')
-
-        #     # Count the number of lines, adding extra lines for long lines
-        #     num_lines = sum((len(line) // 80 + 1) for line in lines)
-
-        #     # Use num_lines as the height of the textarea
-        #     st.text_area("Quiz", quiz_text, height=num_lines*20)
-            
             line_height = 55 # Adjust this value to change the height of each line
             num_charac_per_line = 90 # Adjust this value to change the number of characters per line
             with st.form(key='edit_quiz'):
@@ -398,3 +388,38 @@ if ('questions' in st.session_state):
                     st.markdown("---")
                 
                 submit_button = st.form_submit_button(label='Submit')
+                if submit_button:
+                    # Obtenir la date actuelle au format datetime de MySQL
+                    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+                    # Parcourir toutes les questions
+                    queries = []
+                    for i, question_data in enumerate(json_questions):
+                        # Vérifier si la case à cocher pour cette question est sélectionnée
+                        if st.session_state.get(f"checkbox_{i+1}"):
+                            # Obtenir les valeurs des zones de texte pour cette question
+                            option_A = st.session_state.get(f"option_A_{i+1}")
+                            option_B = st.session_state.get(f"option_B_{i+1}")
+                            option_C = st.session_state.get(f"option_C_{i+1}")
+                            option_D = st.session_state.get(f"option_D_{i+1}")
+                            reponse = st.session_state.get(f"reponse_{i+1}")
+                            
+                            # Convertir la réponse en une liste de lettres
+                            correct_responses_letters = reponse.split(',')
+                            # Créer un dictionnaire pour mapper les lettres aux nombres
+                            letter_to_number = {'A': '1', 'B': '2', 'C': '3', 'D': '4'}
+                            # Convertir les lettres en nombres
+                            correct_responses = [letter_to_number[letter] for letter in correct_responses_letters]
+
+                            # Construire le QTI pour cette question
+                            qti = f'<assessmentItem label="qcm"><responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="identifier"><correctResponse>{"".join([f"<value>{value}</value>" for value in correct_responses])}</correctResponse></responseDeclaration><itemBody><choiceInteraction responseIdentifier="RESPONSE" shuffle="false" maxChoices="0"><prompt>{question_data["question"]}</prompt><simpleChoice identifier="1">{option_A}</simpleChoice><simpleChoice identifier="2">{option_B}</simpleChoice><simpleChoice identifier="3">{option_C}</simpleChoice><simpleChoice identifier="4">{option_D}</simpleChoice></choiceInteraction></itemBody></assessmentItem>'
+
+                            # Échapper les apostrophes dans le QTI
+                            qti = qti.replace("'", "\\'")
+
+                            # Créer la requête SQL pour cette question
+                            query = f"INSERT INTO questions (image,qti, date_creation, date_modification) VALUES ('','{qti}', '{now}', '{now}');"
+                            queries.append(query)
+
+                    # Afficher les requêtes SQL dans une textarea
+                    st.text_area("SQL Queries", "\n".join(queries))
