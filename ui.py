@@ -25,7 +25,7 @@ with open('styles_streamlit.css', 'r') as f:
 
 # Inclure le CSS dans le script Streamlit
 st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
-
+OSError: [Errno 22] Invalid argument: 'styles_streamlit.css'
 # Définir une valeur par défaut les variables de session
 if 'editing' not in st.session_state:
     st.session_state['editing'] = False

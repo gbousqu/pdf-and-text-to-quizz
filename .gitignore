@@ -1,4 +1,7 @@
+#dossiers et fichiers écartés du repository en ligne
 backup
+secret.txt
+pdf-to-quizz-master.code-workspace
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
