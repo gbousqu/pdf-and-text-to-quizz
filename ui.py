@@ -158,6 +158,8 @@ else:
     cnx = mysql.connector.connect(user=db_username, password=db_password,
                                 host=hostname,
                                 database=db_database)
+    
+    st.write("Connexion à la base de données réussie")
 
     # Créer un curseur pour exécuter des requêtes SQL
     cursor = cnx.cursor()
