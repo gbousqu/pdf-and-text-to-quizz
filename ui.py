@@ -69,8 +69,6 @@ else:
     db_database = st.session_state['db_database']
     hostname = st.session_state['hostname']
 
-
-
     st.markdown('[Obtenir une clé API OpenAI](https://platform.openai.com/api-keys)', unsafe_allow_html=True)
     openai_api_key = st.text_input("Entrez votre clé OpenAI", type="password")
     os.environ['OPENAI_API_KEY'] = openai_api_key
@@ -150,6 +148,11 @@ else:
     ##########################################    
 
     st.subheader("Choisir un contexte")
+
+    st.write("user: ", db_username)
+    st.write("password: ", db_password)
+    st.write("database: ", db_database)
+    st.write("hostname: ", hostname)
 
     # Créer une connexion à la base de données
     cnx = mysql.connector.connect(user=db_username, password=db_password,
