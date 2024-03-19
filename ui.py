@@ -50,6 +50,7 @@ if not st.session_state.get('logged_in', False):
                     db_database = 'qcm'
                     db_username = username
                     db_password = password
+                st.session_state['username'] = username
                 st.session_state['logged_in'] = True
                 st.session_state['db_username'] = db_username
                 st.session_state['db_password'] = db_password
@@ -63,7 +64,6 @@ if not st.session_state.get('logged_in', False):
 else:
 
     username = st.session_state['username']
-    password = st.session_state['password']
     db_username = st.session_state['db_username']
     db_password = st.session_state['db_password']
     db_database = st.session_state['db_database']
