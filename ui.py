@@ -14,7 +14,7 @@ import mysql.connector
 # Déterminer si l'application est en cours d'exécution sur Streamlit Sharing
 is_streamlit_sharing = os.getenv('STREAMLIT_SHARING')
 
-print("is_streamlit_sharing: ", is_streamlit_sharing)
+st.write("is_streamlit_sharing: ", is_streamlit_sharing)
 
 
 
