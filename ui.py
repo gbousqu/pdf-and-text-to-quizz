@@ -11,9 +11,29 @@ import streamlit as st
 from datetime import datetime
 import mysql.connector
 
-# Charger les données de connexion à partir du fichier secret.json
-with open('secret.json', 'r') as f:
-    secret_data = json.load(f)
+# Déterminer si l'application est en cours d'exécution sur Streamlit Sharing
+is_streamlit_sharing = os.getenv('STREAMLIT_SHARING')
+
+if is_streamlit_sharing:
+    # Si l'application est en cours d'exécution sur Streamlit Sharing,
+    json_string = st.secrets["secret_json"].replace('\\\\', '\\')
+    secret_data = json.loads(json_string)
+else:        
+    # Charger les données de connexion à partir du fichier secret.json
+    with open('secret.json', 'r') as f:
+        secret_data = json.load(f)
+
+
+
+# Définir le nom d'hôte en fonction de l'environnement
+if is_streamlit_sharing:
+    hostname = 'webpedago.u-bourgogne.fr'
+    database_name = 'qcm_ferrieu'
+else:
+    hostname = 'localhost'
+    database_name = 'qcm'
+
+# print("hostname: ", hostname)
 
 # Si l'utilisateur n'est pas encore connecté
 if not st.session_state.get('logged_in', False):
@@ -40,6 +60,7 @@ if not st.session_state.get('logged_in', False):
 else:
 
     username = st.session_state['username']
+    password = st.session_state['password']
 
     st.markdown('[Obtenir une clé API OpenAI](https://platform.openai.com/api-keys)', unsafe_allow_html=True)
     openai_api_key = st.text_input("Entrez votre clé OpenAI", type="password")
@@ -125,21 +146,7 @@ else:
 
     st.subheader("Choisir un contexte")
 
-    # Déterminer si l'application est en cours d'exécution sur Streamlit Sharing
-    is_streamlit_sharing = os.getenv('STREAMLIT_SHARING')
 
-    username = st.session_state['username']
-    password = st.session_state['password']
-
-    # Définir le nom d'hôte en fonction de l'environnement
-    if is_streamlit_sharing:
-        hostname = 'webpedago.u-bourgogne.fr'
-        database_name = 'qcm_ferrieu'
-    else:
-        hostname = 'localhost'
-        database_name = 'qcm'
-
-    print("hostname: ", hostname)
 
     # Créer une connexion à la base de données
     cnx = mysql.connector.connect(user=username, password=password,
