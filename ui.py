@@ -41,10 +41,10 @@ if not st.session_state.get('logged_in', False):
                 # Si c'est le cas, définir 'logged_in' à True dans l'état de session
                 # Définir le nom d'hôte en fonction de l'environnement
                 if is_streamlit_sharing:
-                    hostname = str.secrets['db_hostname']
-                    db_database = str.secrets['db_database']
-                    db_username = str.secrets['db_username']
-                    db_password = str.secrets['db_password']
+                    hostname = st.secrets['db_hostname']
+                    db_database = st.secrets['db_database']
+                    db_username = st.secrets['db_username']
+                    db_password = st.secrets['db_password']
                 else:
                     hostname = 'localhost'
                     db_database = 'qcm'
