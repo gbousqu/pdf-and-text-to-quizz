@@ -9,7 +9,6 @@ from datetime import datetime
 import json
 import streamlit as st
 from datetime import datetime
-import mysql.connector
 from google.cloud import bigquery
 from google.oauth2 import service_account
 
