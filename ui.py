@@ -24,16 +24,6 @@ else:
         secret_data = json.load(f)
 
 
-# Définir le nom d'hôte en fonction de l'environnement
-if is_streamlit_sharing:
-    hostname = 'webpedago.u-bourgogne.fr'
-    database_name = 'qcm_ferrieu'
-else:
-    hostname = 'localhost'
-    database_name = 'qcm'
-
-# print("hostname: ", hostname)
-
 # Si l'utilisateur n'est pas encore connecté
 if not st.session_state.get('logged_in', False):
     # Créer un formulaire de connexion
@@ -49,9 +39,23 @@ if not st.session_state.get('logged_in', False):
             # Vérifier si le nom d'utilisateur et le mot de passe sont corrects
             if username == data['name'] and password == data['pw']:
                 # Si c'est le cas, définir 'logged_in' à True dans l'état de session
+                # Définir le nom d'hôte en fonction de l'environnement
+                if is_streamlit_sharing:
+                    hostname = str.secrets['db_hostname']
+                    db_database = str.secrets['db_database']
+                    db_username = str.secrets['db_username']
+                    db_password = str.secrets['db_password']
+                else:
+                    hostname = 'localhost'
+                    database_name = 'qcm'
+                    db_username = username
+                    db_password = password
                 st.session_state['logged_in'] = True
-                st.session_state['username'] = username
-                st.session_state['password'] = password
+                st.session_state['db_username'] = db_username
+                st.session_state['db_password'] = db_password
+                st.session_state['db_database'] = db_database
+                st.session_state['hostname'] = hostname
+
                 st.experimental_rerun()
         else:
             # Si aucune correspondance n'a été trouvée, afficher un message d'erreur
@@ -60,6 +64,12 @@ else:
 
     username = st.session_state['username']
     password = st.session_state['password']
+    db_username = st.session_state['db_username']
+    db_password = st.session_state['db_password']
+    db_database = st.session_state['db_database']
+    hostname = st.session_state['hostname']
+
+
 
     st.markdown('[Obtenir une clé API OpenAI](https://platform.openai.com/api-keys)', unsafe_allow_html=True)
     openai_api_key = st.text_input("Entrez votre clé OpenAI", type="password")
@@ -141,19 +151,17 @@ else:
 
     st.subheader("Choisir un contexte")
 
-
-
     # Créer une connexion à la base de données
-    cnx = mysql.connector.connect(user=username, password=password,
+    cnx = mysql.connector.connect(user=db_username, password=db_password,
                                 host=hostname,
-                                database=database_name)
+                                database=db_database)
 
     # Créer un curseur pour exécuter des requêtes SQL
     cursor = cnx.cursor()
 
     # Exécuter la requête pour récupérer les données de la table qcm_prompts_openai
     #on ne récupère que les lignes qui ont été créées par l'utilisateur connecté ou les lignes qui n'ont pas de user
-    query = "SELECT name, content, user FROM qcm_prompts_openai WHERE user='"+username+"' OR user=''"
+    query = "SELECT name, content, user FROM qcm_prompts_openai WHERE user='"+ username +"' OR user=''"
     cursor.execute(query)
 
     # Récupérer les données de la table
