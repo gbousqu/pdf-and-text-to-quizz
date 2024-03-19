@@ -34,39 +34,36 @@ if not st.session_state.get('logged_in', False):
         password = st.text_input('Mot de passe', type='password')
         submit_button = st.form_submit_button(label='Se connecter')
 
-    # Lorsque le bouton de soumission est cliqué
-    if submit_button:
-        # Parcourir chaque élément dans secret_data
-        for data in secret_data:
-            # Vérifier si le nom d'utilisateur et le mot de passe sont corrects
-            if username == data['name'] and password == data['pw']:
-                # Si c'est le cas, définir 'logged_in' à True dans l'état de session
-                # Définir le nom d'hôte en fonction de l'environnement
+        # Lorsque le bouton de soumission est cliqué
+        if submit_button:
+            # Parcourir chaque élément dans secret_data
+            for data in secret_data:
+                # Vérifier si le nom d'utilisateur et le mot de passe sont corrects
+                if username == data['name'] and password == data['pw']:
+                    # Si c'est le cas, définir 'logged_in' à True dans l'état de session
+                    # Définir le nom d'hôte en fonction de l'environnement
+                    if is_streamlit_sharing:
+                        hostname = st.secrets['db_hostname']
+                        db_database = st.secrets['db_database']
+                        db_username = st.secrets['db_username']
+                        db_password = st.secrets['db_password']
+                        st.write('db_password ! :', db_password)
+                    else:
+                        hostname = 'localhost'
+                        db_database = 'qcm'
+                        db_username = username
+                        db_password = password
 
-
-                if is_streamlit_sharing:
-                    hostname = st.secrets['db_hostname']
-                    db_database = st.secrets['db_database']
-                    db_username = st.secrets['db_username']
-                    db_password = st.secrets['db_password']
-                    st.write('db_password ! :', db_password)
-                else:
-                    hostname = 'localhost'
-                    db_database = 'qcm'
-                    db_username = username
-                    db_password = password
-
-                st.session_state['username'] = username
-                st.session_state['logged_in'] = True
-                st.session_state['db_username'] = db_username
-                st.session_state['db_password'] = db_password
-                st.session_state['db_database'] = db_database
-                st.session_state['hostname'] = hostname
-
-                st.experimental_rerun()
-        else:
-            # Si aucune correspondance n'a été trouvée, afficher un message d'erreur
-            st.error('Nom d\'utilisateur ou mot de passe incorrect.')
+                    st.session_state['username'] = username
+                    st.session_state['logged_in'] = True
+                    st.session_state['db_username'] = db_username
+                    st.session_state['db_password'] = db_password
+                    st.session_state['db_database'] = db_database
+                    st.session_state['hostname'] = hostname
+                    st.experimental_rerun()
+            if st.session_state.get('logged_in', False) == False:
+                # Si aucune correspondance n'a été trouvée, afficher un message d'erreur
+                st.error('Nom d\'utilisateur ou mot de passe incorrect.')
 else:
 
     username = st.session_state['username']
