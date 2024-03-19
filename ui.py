@@ -14,6 +14,8 @@ import mysql.connector
 # Déterminer si l'application est en cours d'exécution sur Streamlit Sharing
 is_streamlit_sharing = st.secrets.get("is_streamlit_sharing", False)
 
+st.write("is_streamlit_sharing:", is_streamlit_sharing)
+
 if is_streamlit_sharing:
     # Si l'application est en cours d'exécution sur Streamlit Sharing,
     json_string = st.secrets["secret_json"].replace('\\\\', '\\')
@@ -41,8 +43,7 @@ if not st.session_state.get('logged_in', False):
                 # Si c'est le cas, définir 'logged_in' à True dans l'état de session
                 # Définir le nom d'hôte en fonction de l'environnement
 
-                st.write("is_streamlit_sharing:", is_streamlit_sharing)
-                
+
                 if is_streamlit_sharing:
                     hostname = st.secrets['db_hostname']
                     db_database = st.secrets['db_database']
