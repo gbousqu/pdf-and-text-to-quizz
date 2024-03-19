@@ -47,7 +47,7 @@ if not st.session_state.get('logged_in', False):
                     db_password = str.secrets['db_password']
                 else:
                     hostname = 'localhost'
-                    database_name = 'qcm'
+                    db_database = 'qcm'
                     db_username = username
                     db_password = password
                 st.session_state['logged_in'] = True
