@@ -12,7 +12,7 @@ from datetime import datetime
 import mysql.connector
 
 # Déterminer si l'application est en cours d'exécution sur Streamlit Sharing
-is_streamlit_sharing = os.getenv('STREAMLIT_SHARING')
+is_streamlit_sharing = st.secrets.get("is_streamlit_sharing", False)
 
 st.write("is_streamlit_sharing: ", is_streamlit_sharing)
 
