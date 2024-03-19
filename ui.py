@@ -19,7 +19,7 @@ st.write("is_streamlit_sharing:", is_streamlit_sharing)
 if 'db_password' not in st.session_state:
     st.write("db_password pas encore défini")
 else:
-    st.write("db_password:",st.session_state['db_password'],"pas encore défini")
+    st.write("db_password:",st.session_state['db_password'])
 
 if is_streamlit_sharing:
     # Si l'application est en cours d'exécution sur Streamlit Sharing,
