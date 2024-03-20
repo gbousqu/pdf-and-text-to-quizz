@@ -61,7 +61,7 @@ if not st.session_state.get('logged_in', False):
                     # Si c'est le cas, définir 'logged_in' à True dans l'état de session
                     st.session_state['username'] = username
                     st.session_state['logged_in'] = True
-                    st.rerun()
+                    str.experimental_rerun()
             if st.session_state.get('logged_in', False) == False:
                 # Si aucune correspondance n'a été trouvée, afficher un message d'erreur
                 st.error('Nom d\'utilisateur ou mot de passe incorrect.')
@@ -211,7 +211,7 @@ else:
                 if cancel_button:
                     # print("cancel edited prompt")
                     st.session_state['editing'] = False
-                    st.rerun()
+                    str.experimental_rerun()
 
                 # Sauvegarder les modifications apportées au prompt sélectionné
                 if save_button:
@@ -248,7 +248,7 @@ else:
                         st.session_state['editing'] = False
                         with st.spinner('Mise à jour des données...'):
                             time.sleep(temps_d_attente)
-                        st.rerun()
+                        str.experimental_rerun()
 
 
     ########################################################################################
@@ -285,7 +285,7 @@ else:
             st.session_state['confirm_delete'] = False
             with st.spinner('Mise à jour des données...'):
                 time.sleep(temps_d_attente)
-            st.rerun()
+            str.experimental_rerun()
         
 
     ########################################################################################
@@ -315,7 +315,7 @@ else:
 
             if cancel_button_new_prompt:
                 st.session_state['form_new_prompt'] = False
-                st.rerun()
+                str.experimental_rerun()
 
             # Sauvegarder le nouveau prompt
             if save_button_new_prompt:
@@ -362,7 +362,7 @@ else:
                     st.session_state['form_new_prompt'] = False
                     with st.spinner('Mise à jour des données...'):
                         time.sleep(temps_d_attente)
-                    st.rerun() #forcer le rechargement de la page pour masquer le formulaire de création de prompt
+                    str.experimental_rerun() #forcer le rechargement de la page pour masquer le formulaire de création de prompt
 
 
 
