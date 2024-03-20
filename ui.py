@@ -462,8 +462,9 @@ else:
                         # Obtenir la date actuelle au format datetime de MySQL
                         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+                        # Créer une liste pour stocker les valeurs (qti) à insérer
+                        values = []
                         # Parcourir toutes les questions
-                        queries = []
                         for i, question_data in enumerate(json_questions):
                             # Vérifier si la case à cocher pour cette question est sélectionnée
                             if st.session_state.get(f"checkbox_{i+1}"):
@@ -494,11 +495,11 @@ else:
                                 # Échapper les apostrophes dans le QTI
                                 qti = qti.replace("'", "\\'")
 
-                                # Créer la requête SQL pour cette question                             
-
-                                query = f"INSERT INTO questions (image,qti, date_creation, date_modification) VALUES ('','{qti}', '{now}', '{now}');"
-                                queries.append(query)
+                                # Ajouter les valeurs à la liste
+                                values.append(f"('', '{qti}', '{now}', '{now}')")
+                        # Créer la requête SQL
+                        query = f"INSERT INTO questions (image, qti, date_creation, date_modification) VALUES {', '.join(values)};"
 
                         # Afficher les requêtes SQL dans une textarea
-                        st.text_area("SQL Queries", "\n".join(queries))
+                        st.text_area("SQL à exécuter pour importer les questions", query, height=500)
                                 
