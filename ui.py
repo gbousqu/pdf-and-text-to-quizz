@@ -13,7 +13,14 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 
 if "bigquery_client" not in st.session_state:
-    credentials = service_account.Credentials.from_service_account_file("test-big-query-janv-2019-b5e01a71ad8e.json")
+    # credentials = service_account.Credentials.from_service_account_file("test-big-query-janv-2019-b5e01a71ad8e.json")
+    # Charger les informations du compte de service à partir des secrets de Streamlit
+    gcp_service_account = st.secrets["gcp_service_account"]
+    service_account_info = json.loads(gcp_service_account)
+    # Créer des identifiants à partir des informations du compte de service
+    credentials = service_account.Credentials.from_service_account_info(service_account_info)
+    # Créer un client BigQuery avec ces identifiants
+    client = bigquery.Client(credentials=credentials)
     st.session_state.bigquery_client = bigquery.Client(credentials=credentials)
 
 client = st.session_state.bigquery_client
