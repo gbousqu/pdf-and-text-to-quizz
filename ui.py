@@ -12,6 +12,7 @@ from datetime import datetime
 from google.cloud import bigquery
 from google.oauth2 import service_account
 import time
+import html
 
 temps_d_attente = 2 #pour attendre que bigquery se mette à jour après modification, création, suppression de données et avant de recharger la page
 
@@ -87,7 +88,7 @@ else:
     ###########################################
     # choisir un type de question
     st.subheader("Choisir un type de question")
-    type_question = st.radio("", ("QCM avec une réponse correcte", "QCM avec 1,2 ou 3 réponses correctes", "Vrai/Faux"))
+    type_question = st.radio("type de question", ("QCM avec une réponse correcte", "QCM avec 1,2 ou 3 réponses correctes", "Vrai/Faux"),label_visibility='hidden')
     # if "type_question" not in st.session_state:
     #             st.session_state["type_question"] = "QCM avec une réponse correcte"
     # else :
@@ -480,13 +481,21 @@ else:
                                 # Convertir les lettres en nombres
                                 correct_responses = [letter_to_number[letter] for letter in correct_responses_letters]
 
+                                question = question_data["question"]
+                                question = html.escape(question)
+                                option_A = html.escape(option_A)
+                                option_B = html.escape(option_B)
+                                option_C = html.escape(option_C)
+                                option_D = html.escape(option_D)
+
                                 # Construire le QTI pour cette question
-                                qti = f'<assessmentItem label="qcm"><responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="identifier"><correctResponse>{"".join([f"<value>{value}</value>" for value in correct_responses])}</correctResponse></responseDeclaration><itemBody><choiceInteraction responseIdentifier="RESPONSE" shuffle="false" maxChoices="0"><prompt>{question_data["question"]}</prompt><simpleChoice identifier="1">{option_A}</simpleChoice><simpleChoice identifier="2">{option_B}</simpleChoice><simpleChoice identifier="3">{option_C}</simpleChoice><simpleChoice identifier="4">{option_D}</simpleChoice></choiceInteraction></itemBody></assessmentItem>'
+                                qti = f'<assessmentItem label="qcm"><responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="identifier"><correctResponse>{"".join([f"<value>{value}</value>" for value in correct_responses])}</correctResponse></responseDeclaration><itemBody><choiceInteraction responseIdentifier="RESPONSE" shuffle="false" maxChoices="0"><prompt>{question}</prompt><simpleChoice identifier="1">{option_A}</simpleChoice><simpleChoice identifier="2">{option_B}</simpleChoice><simpleChoice identifier="3">{option_C}</simpleChoice><simpleChoice identifier="4">{option_D}</simpleChoice></choiceInteraction></itemBody></assessmentItem>'
 
                                 # Échapper les apostrophes dans le QTI
                                 qti = qti.replace("'", "\\'")
 
-                                # Créer la requête SQL pour cette question
+                                # Créer la requête SQL pour cette question                             
+
                                 query = f"INSERT INTO questions (image,qti, date_creation, date_modification) VALUES ('','{qti}', '{now}', '{now}');"
                                 queries.append(query)
 
