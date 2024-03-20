@@ -98,51 +98,51 @@ else:
     if type_question == "QCM avec une réponse correcte": 
             print("QCM avec une réponse correcte")
             format_question ="""
-        Les questions seront de type QCM avec quatre options. Parmi les quatre options proposées, une seule option est vraie, les autres sont fausses.
-        La réponse (answer) devra être la lettre correspondant à la réponse correcte.
-        Voici le modèle pour chaque question :
+Les questions seront de type QCM avec quatre options. Parmi les quatre options proposées, une seule option est vraie, les autres sont fausses.
+La réponse (answer) devra être la lettre correspondant à la réponse correcte.
+Voici le modèle pour chaque question :
 
-        Question 1,2, ... : énoncé de la question ici (le numéro de la question doit être spécifié)
-        CHOICE_A: une option
-        CHOICE_B: une autre option
-        CHOICE_C: une autre option
-        CHOICE_D: une autre option
-        Answer: l'unique option correcte (exemple : A ou B ou C ou D)
-        Chaque question doit être détaillée 
-        La question et les options seront en français, mais garde en anglais les mots CHOICE et answer dans le modèle ci-dessus."""
+Question 1,2, ... : énoncé de la question ici (le numéro de la question doit être spécifié)
+CHOICE_A: une option
+CHOICE_B: une autre option
+CHOICE_C: une autre option
+CHOICE_D: une autre option
+Answer: l'unique option correcte (exemple : A ou B ou C ou D)
+Chaque question doit être détaillée 
+La question et les options seront en français, mais garde en anglais les mots CHOICE et answer dans le modèle ci-dessus."""
 
     elif type_question == "QCM avec 1,2 ou 3 réponses correctes":
         print("QCM avec plusieurs réponses correctes")
         format_question = """
-        Les question seront de type QCM avec quatre options .
-        Parmi les quatre options, deux ou trois doivent être correctes.
-        La réponse (answer) devra être une chaine de caractères avec les lettres des options correctes, séparées par une virgule. Par exemple, si les options correctes sont A et C, alors la réponse sera A,C.
-        Voici le modèle pour chaque question :
+Les question seront de type QCM avec quatre options .
+Parmi les quatre options, deux ou trois doivent être correctes.
+La réponse (answer) devra être une chaine de caractères avec les lettres des options correctes, séparées par une virgule. Par exemple, si les options correctes sont A et C, alors la réponse sera A,C.
+Voici le modèle pour chaque question :
 
-        Question 1,2, ... : énoncé de la question ici (le numéro de la question doit être spécifié)
-        CHOICE_A: une option
-        CHOICE_B: une autre option
-        CHOICE_C: une autre option
-        CHOICE_D: une autre option
-        Answer: la ou les options correctes (exemple : A,C ou A,B,C ou  ...)
+Question 1,2, ... : énoncé de la question ici (le numéro de la question doit être spécifié)
+CHOICE_A: une option
+CHOICE_B: une autre option
+CHOICE_C: une autre option
+CHOICE_D: une autre option
+Answer: la ou les options correctes (exemple : A,C ou A,B,C ou  ...)
 
-        Chaque question doit être détaillée.
-        La question et les options seront en français, mais garde en anglais les mots CHOICE et answer dans le modèle ci-dessus
+Chaque question doit être détaillée.
+La question et les options seront en français, mais garde en anglais les mots CHOICE et answer dans le modèle ci-dessus
             """
         
     else:
         print("Vrai/Faux")
         format_question = """
-        Les questions seront de type Vrai/Faux.
-        La réponse (answer) devra être soit Vrai soit Faux.
-        Voici le modèle pour chaque question :
+Les questions seront de type Vrai/Faux.
+La réponse (answer) devra être soit Vrai soit Faux.
+Voici le modèle pour chaque question :
 
-        Question 1,2, ... : énoncé de la question ici (le numéro de la question doit être spécifié)
-        Answer: Vrai ou Faux
-        Explanation: explication de la réponse
-        Chaque question doit être détaillée.
-        La question sera en français, mais garde en anglais les mots Answer et Explanation dans le modèle ci-dessus
-        """
+Question 1,2, ... : énoncé de la question ici (le numéro de la question doit être spécifié)
+Answer: Vrai ou Faux
+Explanation: explication de la réponse
+Chaque question doit être détaillée.
+La question sera en français, mais garde en anglais les mots Answer et Explanation dans le modèle ci-dessus
+"""
 
     st.session_state['format_question'] = format_question
     # print("\n format_question: ", format_question)        
@@ -482,7 +482,7 @@ else:
                                 # Convertir les lettres en nombres
                                 correct_responses = [letter_to_number[letter] for letter in correct_responses_letters]
 
-                                question = question_data["question"]
+                                question = st.session_state.get(f"question_{i+1}")
                                 question = html.escape(question)
                                 option_A = html.escape(option_A)
                                 option_B = html.escape(option_B)

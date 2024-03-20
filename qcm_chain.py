@@ -91,9 +91,9 @@ class QCMGenerateChain(LLMChain):
             chaine_regex = r"\n\n?".join(f"Question {i}:\n*(.*?)\n\n?Answer: ?(.*?)\n\n?Explanation: ?(.*?)" for i in range(1, num_questions_per_page+1))
             chaine_regex += "$"
 
-        # print("\n chaine regex: \n", repr(chaine_regex))
-        # print("\n output_keys: \n", output_keys)
-        # print("\n")        
+        print("\n chaine regex: \n", repr(chaine_regex))
+        print("\n output_keys: \n", output_keys)
+        print("\n")        
 
         output_parser = RegexParser(
             regex=chaine_regex,
