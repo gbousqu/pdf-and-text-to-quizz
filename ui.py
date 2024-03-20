@@ -103,7 +103,7 @@ else:
         CHOICE_B: une autre option
         CHOICE_C: une autre option
         CHOICE_D: une autre option
-        Answer: options correctes (exemple : A ou B ou C ou D)
+        Answer: l'unique option correcte (exemple : A ou B ou C ou D)
         Chaque question doit être détaillée 
         La question et les options seront en français, mais garde en anglais les mots CHOICE et answer dans le modèle ci-dessus."""
 
@@ -120,7 +120,7 @@ else:
         CHOICE_B: une autre option
         CHOICE_C: une autre option
         CHOICE_D: une autre option
-        Answer: options correctes (exemple : A,C ou A,B,C ou  ...)
+        Answer: la ou les options correctes (exemple : A,C ou A,B,C ou  ...)
 
         Chaque question doit être détaillée.
         La question et les options seront en français, mais garde en anglais les mots CHOICE et answer dans le modèle ci-dessus
