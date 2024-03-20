@@ -11,6 +11,9 @@ import streamlit as st
 from datetime import datetime
 from google.cloud import bigquery
 from google.oauth2 import service_account
+import time
+
+temps_d_attente = 3 #pour attendre que bigquery se mette à jour après modification, création, suppression de données et avant de recharger la page
 
 if "bigquery_client" not in st.session_state:
     # credentials = service_account.Credentials.from_service_account_file("test-big-query-janv-2019-b5e01a71ad8e.json")
@@ -58,7 +61,7 @@ if not st.session_state.get('logged_in', False):
                     # Si c'est le cas, définir 'logged_in' à True dans l'état de session
                     st.session_state['username'] = username
                     st.session_state['logged_in'] = True
-                    st.experimental_rerun()
+                    st.rerun()
             if st.session_state.get('logged_in', False) == False:
                 # Si aucune correspondance n'a été trouvée, afficher un message d'erreur
                 st.error('Nom d\'utilisateur ou mot de passe incorrect.')
@@ -149,23 +152,24 @@ else:
     # Exécuter la requête pour récupérer les données de la table qcm_prompts_openai
     #on ne récupère que les lignes qui ont été créées par l'utilisateur connecté ou les lignes qui n'ont pas de user
     query = "SELECT name, content, user FROM qcm.qcm_prompts_openai WHERE user='"+ username +"' OR user=''"
-    data = list(client.query(query).result())
+    rows = list(client.query(query).result())
 
     # Créer une liste des noms des prompts
-    prompt_names = [prompt[0] for prompt in data]
+    prompt_names = [prompt[0] for prompt in rows]
 
     # Sélectionner un nom de prompt à partir de la liste déroulante
-    selected_prompt_name = st.selectbox('', prompt_names, key='select_prompt')
+    selected_prompt_name = st.selectbox('choisir un contexte', prompt_names, key='select_prompt',label_visibility='hidden')
+
 
     # Trouver le contenu et le créateur (user) du prompt correspondant dans les données récupérées de la base de données
     #selected_prompt est un tableau à deux éléments :le name et le content du prompt
-    selected_prompt = next(prompt for prompt in data if prompt[0] == selected_prompt_name)
+    selected_prompt = next(prompt for prompt in rows if prompt[0] == selected_prompt_name)
 
     selected_prompt_content = selected_prompt[1]
     selected_prompt_user = selected_prompt[2]
 
     if selected_prompt_user == "":
-        st.write("Ce contexte est en lecture seule")
+        st.write("Ce contexte est en lecture seule, vous pouvez cliquer sur 'créer un nouveau contexte' pour le dupliquer.")
     else:
         st.write("Créé par : ", selected_prompt_user)
 
@@ -179,7 +183,7 @@ else:
 
 
     ########################################################################################
-    # Ajouter un bouton "Modifier le prompt ci-dessus"
+    # Ajouter un bouton "Modifier le contexte"
     if selected_prompt_user != "":
         if st.button('Modifier ce contexte', key='edit_above_prompt'):
             #ce drapeau editing est utilisé pour qu'au rechargement de la page, le formulaire d'édition soit affiché
@@ -205,9 +209,9 @@ else:
                 ########################################################################################
 
                 if cancel_button:
-                    print("cancel edited prompt")
+                    # print("cancel edited prompt")
                     st.session_state['editing'] = False
-                    st.experimental_rerun()
+                    st.rerun()
 
                 # Sauvegarder les modifications apportées au prompt sélectionné
                 if save_button:
@@ -217,23 +221,10 @@ else:
                     # print(new_prompt_name)
 
                     if new_prompt_name.strip() and new_prompt_content.strip():
-
-                        # Mettre à jour data
-                        # print("mise à jour de data [liste des prompts] et du fichier prompts.json")
-                        # for prompt in data:
-                        #     if prompt[0] == selected_prompt_name :
-                        #         prompt[0] = new_prompt_name
-                        #         prompt[1] = new_prompt_content
-                        #         break
-
-                        # Sauvegarder les prompts dans le fichier JSON
-                        # désactivé temporairement pour le déploiement streamlit
-                        # with open('prompts.json', 'w') as f:
-                        #     json.dump(data, f)
                             
                         # Mettre à jour la table
                         query = """
-                            UPDATE `pix.qcm_prompts_openai`
+                            UPDATE `qcm.qcm_prompts_openai`
                             SET name = @new_prompt_name, content = @new_prompt_content
                             WHERE name = @selected_prompt_name AND user = @username
                         """
@@ -255,22 +246,31 @@ else:
                         #sortir de l'édition du prompt
                         # print("mise à jour de st.session_state['editing'] à false")
                         st.session_state['editing'] = False
-                        st.experimental_rerun()
+                        with st.spinner('Mise à jour des données...'):
+                            time.sleep(temps_d_attente)
+                        st.rerun()
 
 
     ########################################################################################
 
     # Ajouter un bouton "Supprimer" seulement s'il y a au moins deux prompts et si on est le créateur du prompt
-    if len(data) > 1 and selected_prompt_user != "":
-        if st.button('Supprimer ce contexte', key='delete_prompt'):
+    if len(rows) > 1 and selected_prompt_user != "":
+        if st.button('Supprimer ce contexte (n\'oubliez pas de cocher la confirmation)', key='delete_prompt'):
             st.session_state['confirm_delete'] = True  # Change this to True
 
     # Si le bouton "Supprimer" a été cliqué, afficher une case à cocher pour la confirmation
     if st.session_state.get('confirm_delete', False): # (false : valeur par défaut)
         confirm = st.checkbox('Confirmer la suppression', key='confirm_delete_checkbox')
         if confirm:
+
+            # affiche_query = f"""
+            #     DELETE FROM `qcm.qcm_prompts_openai`
+            #     WHERE name = '{selected_prompt_name}' AND user = '{username}'
+            # """
+            # print(affiche_query)
+
             query = """
-                DELETE FROM `test-big-query-janv-2019.pix.qcm_prompts_openai`
+                DELETE FROM `qcm.qcm_prompts_openai`
                 WHERE name = @selected_prompt_name AND user = @username
             """
             params = [
@@ -281,29 +281,15 @@ else:
             job_config.query_parameters = params
             client.query(query, job_config=job_config)
 
-
-
-            # Supprimer le prompt de la liste des prompts
-            # data.remove(selected_prompt)
-
-            # # Sauvegarder les données dans le fichier JSON
-            # with open('prompts.json', 'w') as f:
-            #     json.dump(data, f)
-
-            # # Mettre à jour la liste des noms de prompts
-            # prompt_names = [prompt['name'] for prompt in data]
-
-            # Sélectionner le premier prompt
-            # selected_prompt = data[0] if data else None
-
             # se rappeler que la case à cocher de confirmation doit etre masquée
             st.session_state['confirm_delete'] = False
-
-            st.experimental_rerun()
+            with st.spinner('Mise à jour des données...'):
+                time.sleep(temps_d_attente)
+            st.rerun()
         
 
     ########################################################################################
-    if st.button('Créer un nouveau contexte', key="add_new_prompt"):
+    if st.button('Créer un nouveau contexte à partir de celui-là', key="add_new_prompt"):
         #ce drapeau editing est utilisé pour qu'au rechargement de la page, le formulaire d'édition soit affiché
         st.session_state['form_new_prompt'] = True
 
@@ -312,22 +298,24 @@ else:
         with st.form(key='new_form'):
 
             # Ajouter un bouton "Enregistrer"
-            save_button_new_prompt = st.form_submit_button('Enregistrer ce nouveau prompt')
+            save_button_new_prompt = st.form_submit_button('Enregistrer ce nouveau contexte')
 
             # Ajouter un bouton "Annuler"
-            cancel_button_new_prompt = st.form_submit_button('Annuler la création du nouveau prompt')
+            cancel_button_new_prompt = st.form_submit_button('Annuler la création du nouveau contexte')
            # Ajouter un nouveau nom de prompt (par défaut celui du prompt sélectionné, pour simplifier la duplication)
-            st.session_state['new_prompt_name'] = st.text_input('Nom du prompt', value=selected_prompt_name, key='edit_new_prompt_name')
+            selected_prompt_name = selected_prompt_name + " [copie " + username + "]"
+            
+            st.session_state['new_prompt_name'] = st.text_input('Nom du contexte', value=selected_prompt_name, key='edit_new_prompt_name')
 
             # Ajouter un nouveau contenu de prompt (par défault celui du prompt sélectionné, pour simplifier la duplication)
-            st.session_state['new_prompt_content'] = st.text_area('Contenu du prompt', value=selected_prompt_content, key='edit_new_prompt_content', height=500)
+            st.session_state['new_prompt_content'] = st.text_area('Contenu du contexte', value=selected_prompt_content, key='edit_new_prompt_content', height=500)
 
         
             ########################################################################################
 
             if cancel_button_new_prompt:
                 st.session_state['form_new_prompt'] = False
-                st.experimental_rerun()
+                st.rerun()
 
             # Sauvegarder le nouveau prompt
             if save_button_new_prompt:
@@ -337,17 +325,17 @@ else:
 
                 # Vérifier si une entrée avec le même name et user existe déjà
                 query = """
-                    SELECT * FROM `test-big-query-janv-2019.pix.qcm_prompts_openai`
-                    WHERE name = @new_prompt_name AND user = @username
+                    SELECT * FROM `qcm.qcm_prompts_openai`
+                    WHERE name = @new_prompt_name 
                 """
                 params = [
-                    bigquery.ScalarQueryParameter('new_prompt_name', 'STRING', new_prompt_name),
-                    bigquery.ScalarQueryParameter('username', 'STRING', username),
+                    bigquery.ScalarQueryParameter('new_prompt_name', 'STRING', new_prompt_name),                    
                 ]
                 job_config = bigquery.QueryJobConfig()
                 job_config.query_parameters = params
                 results = client.query(query, job_config=job_config)
-                existing_entry = results.result().fetchone()
+                rows = list(results.result())
+                existing_entry = rows[0] if rows else None
 
                 if new_prompt_name.strip() and new_prompt_content.strip() and not existing_entry:
                 
@@ -359,7 +347,7 @@ else:
                     #     json.dump(data, f)
 
                     query = """
-                        INSERT INTO `test-big-query-janv-2019.pix.qcm_prompts_openai` (name, content, user)
+                        INSERT INTO `test-big-query-janv-2019.qcm.qcm_prompts_openai` (name, content, user)
                         VALUES (@new_prompt_name, @new_prompt_content, @username)
                     """
                     params = [
@@ -372,7 +360,9 @@ else:
                     client.query(query, job_config=job_config)
 
                     st.session_state['form_new_prompt'] = False
-                    st.experimental_rerun() #forcr le rechargement de la page pour masquer le formulaire de création de prompt
+                    with st.spinner('Mise à jour des données...'):
+                        time.sleep(temps_d_attente)
+                    st.rerun() #forcer le rechargement de la page pour masquer le formulaire de création de prompt
 
 
 
@@ -407,33 +397,6 @@ else:
                     st.session_state['contexte']=selected_prompt_content
                     st.session_state['questions'] = asyncio.run(txt_to_quizz(txt))
 
-    # def build_question(count, json_question):
-
-    #     if json_question.get(f"question") is not None:
-    #         st.write("Question: ", json_question.get(f"question", ""))
-    #         choices = ['A', 'B', 'C', 'D']
-    #         selected_answer = st.selectbox(f"Selectionnez votre réponse:", choices, key=f"select_{count}")
-    #         for choice in choices:
-    #             choice_str = json_question.get(f"{choice}", "None")
-    #             st.write(f"{choice} {choice_str}")
-                        
-    #         color = ""
-    #         if st.button("Soumettre", key=f"button_{count}"):
-    #             rep = json_question.get(f"reponse")
-    #             if selected_answer == rep:
-    #                 color = ":green"
-    #                 st.write(f":green[Bonne réponse: {rep}]")
-                    
-    #             else:
-    #                 color = ":red"
-    #                 st.write(f":red[Mauvaise réponse. La bonne réponse est {rep}].")                
-
-    #         st.write(f"{color}[Votre réponse: {selected_answer}]")
-
-    #         count += 1
-
-    #     return count
-
 
     if ('questions' in st.session_state):
     #les questions ont été générées      
@@ -461,18 +424,7 @@ else:
 
                 # remove extension .pdf from file name
                 if file_name.endswith(".pdf"):
-                    file_name = file_name[:-4]
-
-            #sauvegarde des questions au format json
-            # désactivé pour le déploiement streamlit
-                # with open(f"data/quiz-{file_name}-{date_suffix}.json", "w", encoding='latin-1', errors='ignore') as f:
-                #     str = json.dumps(json_questions)
-                #     f.write(str)
-
-            #génération d'un pdf avec questions et réponses (pour l'instant on se passe de cette option)
-                # generate_pdf_quiz(f"data/quiz-{file_name}-{date_suffix}.json", json_questions)
-                
-                # st.write("Quiz généré avec succès! (sauvegarde json dans le dossier data)")     
+                    file_name = file_name[:-4]   
 
                 line_height = 55 # Adjust this value to change the height of each line
                 num_charac_per_line = 90 # Adjust this value to change the number of characters per line
@@ -504,7 +456,7 @@ else:
                                 st.text_area(f"Explication", question_data["explication"], key=f"explication_{i+1}", height=num_lines_explication*line_height)
                         st.markdown("---")
                     
-                    submit_button = st.form_submit_button(label='Submit')
+                    submit_button = st.form_submit_button(label='Générer le sql d\'importation des questions dans la base de données')
                     if submit_button:
                         # Obtenir la date actuelle au format datetime de MySQL
                         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
