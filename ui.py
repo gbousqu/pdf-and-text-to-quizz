@@ -13,7 +13,7 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 import time
 
-temps_d_attente = 3 #pour attendre que bigquery se mette à jour après modification, création, suppression de données et avant de recharger la page
+temps_d_attente = 2 #pour attendre que bigquery se mette à jour après modification, création, suppression de données et avant de recharger la page
 
 if "bigquery_client" not in st.session_state:
     # credentials = service_account.Credentials.from_service_account_file("test-big-query-janv-2019-b5e01a71ad8e.json")
@@ -61,7 +61,7 @@ if not st.session_state.get('logged_in', False):
                     # Si c'est le cas, définir 'logged_in' à True dans l'état de session
                     st.session_state['username'] = username
                     st.session_state['logged_in'] = True
-                    str.experimental_rerun()
+                    st.experimental_rerun()
             if st.session_state.get('logged_in', False) == False:
                 # Si aucune correspondance n'a été trouvée, afficher un message d'erreur
                 st.error('Nom d\'utilisateur ou mot de passe incorrect.')
@@ -211,7 +211,7 @@ else:
                 if cancel_button:
                     # print("cancel edited prompt")
                     st.session_state['editing'] = False
-                    str.experimental_rerun()
+                    st.experimental_rerun()
 
                 # Sauvegarder les modifications apportées au prompt sélectionné
                 if save_button:
@@ -248,7 +248,7 @@ else:
                         st.session_state['editing'] = False
                         with st.spinner('Mise à jour des données...'):
                             time.sleep(temps_d_attente)
-                        str.experimental_rerun()
+                        st.experimental_rerun()
 
 
     ########################################################################################
@@ -285,7 +285,7 @@ else:
             st.session_state['confirm_delete'] = False
             with st.spinner('Mise à jour des données...'):
                 time.sleep(temps_d_attente)
-            str.experimental_rerun()
+            st.experimental_rerun() 
         
 
     ########################################################################################
@@ -315,7 +315,7 @@ else:
 
             if cancel_button_new_prompt:
                 st.session_state['form_new_prompt'] = False
-                str.experimental_rerun()
+                st.experimental_rerun()
 
             # Sauvegarder le nouveau prompt
             if save_button_new_prompt:
@@ -362,7 +362,7 @@ else:
                     st.session_state['form_new_prompt'] = False
                     with st.spinner('Mise à jour des données...'):
                         time.sleep(temps_d_attente)
-                    str.experimental_rerun() #forcer le rechargement de la page pour masquer le formulaire de création de prompt
+                    st.experimental_rerun() #forcer le rechargement de la page pour masquer le formulaire de création de prompt
 
 
 
