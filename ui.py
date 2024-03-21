@@ -326,16 +326,13 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
             selected_contexte_name = selected_contexte_name + " [copie " + username + "]"
 
             #ajouter un choix de visibilité (public ou privé)
-            st.session_state['new_contexte_visibility'] = st.radio("Visibilité du contexte", ("public", "privé"), key='edit_new_contexte_visibility',label_visibility='hidden')
+            st.session_state['new_contexte_visibility'] = st.radio("Visibilité du contexte", ("public", "private"), key='edit_contexte_visibility',label_visibility='hidden', index=("public", "private").index(selected_contexte['visibility']))
 
             #ajouter une description du contexte
-            st.session_state['new_contexte_description'] = st.text_input('Description du contexte', value=selected_contexte_description, key='edit_new_contexte_description')
+            st.session_state['new_contexte_description'] = st.text_area('Description du contexte', value=selected_contexte['description'], key='edit_contexte_description',height=500)
             
-            # Ajouter un nouveau nom de contexte
-            st.session_state['new_contexte_name'] = st.text_input('Nom du contexte', value=selected_contexte_name, key='edit_new_contexte_name')
-
-            # Ajouter un nouveau contenu de contexte (par défault celui du contexte sélectionné, pour simplifier la duplication)
-            st.session_state['new_contexte_content'] = st.text_area('Contenu du contexte', value=selected_contexte_content, key='edit_new_contexte_content', height=500)
+            # Ajouter un nouveau contenu de contexte
+            st.session_state['new_contexte_content'] = st.text_area('Modifier le contexte', value=selected_contexte['content'], key='edit_contexte_content', height=500)
 
            
             ########################################################################################
