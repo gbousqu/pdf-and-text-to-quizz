@@ -1,3 +1,8 @@
+
+#A FAIRE
+# - ajouter une zone de texte, une zone pour url d'image, une zone pour url de lien hypertexte avant la génération du sql
+#   pour ajouter des informations supplémentaires à chaque question (texte, image, lien hypertexte)
+
 import streamlit as st
 from pdf_to_quizz import pdf_to_quizz
 from text_to_quizz import txt_to_quizz
