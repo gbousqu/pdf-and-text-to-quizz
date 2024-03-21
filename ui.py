@@ -36,12 +36,7 @@ is_streamlit_sharing = st.secrets.get("is_streamlit_sharing", False)
 json_string = st.secrets["secret_json"].replace('\\\\', '\\')
 secret_data = json.loads(json_string)
 
-def escape_html_except_a(text):
-    # Trouver toutes les balises sauf <img> et <a>
-    regex = re.compile(r'<(?!img|a|/img|/a).*?>', re.IGNORECASE)
-    # Remplacer ces balises par leur version échappée
-    escaped_text = regex.sub(lambda m: html.escape(m.group(0)), text)
-    return escaped_text
+
 
 
 # if is_streamlit_sharing:
@@ -472,8 +467,6 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                         st.checkbox(f"Sélectionner cette question", key=f"checkbox_{i+1}",value=True)
                         num_lines_question = len(question_data["question"]) // num_charac_per_line + 1
 
-                         # Ajouter une case à cocher pour le choix de l'échappement
-                        st.session_state[f'use_escape_html_except_a_{i+1}'] = st.checkbox('ne pas échapper les balises a dans le html de la question', key=f'escape_html_except_img_a_{i+1}')
 
                         st.text_area(f"Question {i+1}", question_data["question"], key=f"question_{i+1}", height=num_lines_question*line_height)
                        
@@ -527,12 +520,8 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                                     correct_responses = [letter_to_number[letter] for letter in correct_responses_letters]
 
                                     question = st.session_state.get(f"question_{i+1}")
-                  
-                                    # Utiliser escape_html_except_img_a si la case est cochée, sinon utiliser html.escape
-                                    if st.session_state[f'use_escape_html_except_img_a_{i+1}']:
-                                        question = escape_html_except_a(question)
-                                    else:
-                                        question = html.escape(question)
+
+                                    question = html.escape(question)
                                     option_A = html.escape(option_A)
                                     option_B = html.escape(option_B)
                                     option_C = html.escape(option_C)
