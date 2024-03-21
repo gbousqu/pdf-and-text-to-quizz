@@ -530,7 +530,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                   
                                     # Utiliser escape_html_except_img_a si la case est cochée, sinon utiliser html.escape
                                     if st.session_state[f'use_escape_html_except_img_a_{i+1}']:
-                                        question = escape_html_except_img_a(question)
+                                        question = escape_html_except_a(question)
                                     else:
                                         question = html.escape(question)
                                     option_A = html.escape(option_A)
