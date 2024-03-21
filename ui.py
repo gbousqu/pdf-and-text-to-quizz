@@ -13,6 +13,7 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 import time
 import html
+import re
 
 temps_d_attente = 2 #pour attendre que bigquery se mette à jour après modification, création, suppression de données et avant de recharger la page
 
@@ -34,6 +35,14 @@ is_streamlit_sharing = st.secrets.get("is_streamlit_sharing", False)
 
 json_string = st.secrets["secret_json"].replace('\\\\', '\\')
 secret_data = json.loads(json_string)
+
+def escape_html_except_a(text):
+    # Trouver toutes les balises sauf <img> et <a>
+    regex = re.compile(r'<(?!img|a|/img|/a).*?>', re.IGNORECASE)
+    # Remplacer ces balises par leur version échappée
+    escaped_text = regex.sub(lambda m: html.escape(m.group(0)), text)
+    return escaped_text
+
 
 # if is_streamlit_sharing:
 #     # Si l'application est en cours d'exécution sur Streamlit Sharing,
@@ -456,14 +465,18 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                 if file_name.endswith(".pdf"):
                     file_name = file_name[:-4]   
 
-                line_height = 55 # Adjust this value to change the height of each line
+                line_height = 60 # Adjust this value to change the height of each line
                 num_charac_per_line = 90 # Adjust this value to change the number of characters per line
                 with st.form(key='edit_quiz'):
                     for i, question_data in enumerate(json_questions):
                         st.checkbox(f"Sélectionner cette question", key=f"checkbox_{i+1}",value=True)
                         num_lines_question = len(question_data["question"]) // num_charac_per_line + 1
+
+                         # Ajouter une case à cocher pour le choix de l'échappement
+                        st.session_state[f'use_escape_html_except_a_{i+1}'] = st.checkbox('ne pas échapper les balises a dans le html de la question', key=f'escape_html_except_img_a_{i+1}')
+
                         st.text_area(f"Question {i+1}", question_data["question"], key=f"question_{i+1}", height=num_lines_question*line_height)
-                        
+                       
                         if type_question in ["QCM avec une réponse correcte", "QCM avec 1,2 ou 3 réponses correctes"]:
                             col1, col2 = st.columns([1,10])
                             with col2:
@@ -514,14 +527,19 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                                     correct_responses = [letter_to_number[letter] for letter in correct_responses_letters]
 
                                     question = st.session_state.get(f"question_{i+1}")
-                                    question = html.escape(question)
+                  
+                                    # Utiliser escape_html_except_img_a si la case est cochée, sinon utiliser html.escape
+                                    if st.session_state[f'use_escape_html_except_img_a_{i+1}']:
+                                        question = escape_html_except_img_a(question)
+                                    else:
+                                        question = html.escape(question)
                                     option_A = html.escape(option_A)
                                     option_B = html.escape(option_B)
                                     option_C = html.escape(option_C)
                                     option_D = html.escape(option_D)
 
                                     # Construire le QTI pour cette question
-                                    qti = f'<assessmentItem label="qcm"><responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="identifier"><correctResponse>{"".join([f"<value>{value}</value>" for value in correct_responses])}</correctResponse></responseDeclaration><itemBody><choiceInteraction responseIdentifier="RESPONSE" shuffle="false" maxChoices="0"><contexte>{question}</contexte><simpleChoice identifier="1">{option_A}</simpleChoice><simpleChoice identifier="2">{option_B}</simpleChoice><simpleChoice identifier="3">{option_C}</simpleChoice><simpleChoice identifier="4">{option_D}</simpleChoice></choiceInteraction></itemBody></assessmentItem>'
+                                    qti = f'<assessmentItem label="qcm"><responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="identifier"><correctResponse>{"".join([f"<value>{value}</value>" for value in correct_responses])}</correctResponse></responseDeclaration><itemBody><choiceInteraction responseIdentifier="RESPONSE" shuffle="false" maxChoices="0"><prompt>{question}</prompt><simpleChoice identifier="1">{option_A}</simpleChoice><simpleChoice identifier="2">{option_B}</simpleChoice><simpleChoice identifier="3">{option_C}</simpleChoice><simpleChoice identifier="4">{option_D}</simpleChoice></choiceInteraction></itemBody></assessmentItem>'
 
                                     # Échapper les apostrophes dans le QTI
                                     qti = qti.replace("'", "\\'")
