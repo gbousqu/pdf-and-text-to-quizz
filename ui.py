@@ -152,46 +152,57 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
 
     # Exécuter la requête pour récupérer les données de la table qcm_prompts_openai
     #on ne récupère que les lignes qui ont été créées par l'utilisateur connecté ou les lignes qui n'ont pas de user
-    query = "SELECT name, content, user FROM qcm.qcm_prompts_openai WHERE user='"+ username +"' OR user=''"
-    rows = list(client.query(query).result())
+    query = "SELECT name, content, user, visibility,description  FROM qcm.qcm_prompts_openai WHERE user='"+ username +"' OR visibility='public'"
+   
+    query_job = client.query(query)
 
-    # Créer une liste des noms des prompts
-    prompt_names = [prompt[0] for prompt in rows]
+    # Convertir le résultat de la requête en un DataFrame pandas
+    df = query_job.to_dataframe()
 
-    # Sélectionner un nom de prompt à partir de la liste déroulante
-    selected_prompt_name = st.selectbox('choisir un contexte', prompt_names, key='select_prompt',label_visibility='hidden')
+    # Convertir le DataFrame en une liste de dictionnaires
+    rows = df.to_dict('records')
 
+    # Créer une liste des noms des contextes
+    contexte_names = [contexte['name'] for contexte in rows]
 
-    # Trouver le contenu et le créateur (user) du prompt correspondant dans les données récupérées de la base de données
-    #selected_prompt est un tableau à deux éléments :le name et le content du prompt
-    selected_prompt = next(prompt for prompt in rows if prompt[0] == selected_prompt_name)
+    # Sélectionner un nom de contexte à partir de la liste déroulante
+    selected_contexte_name = st.selectbox('choisir un contexte', contexte_names, key='select_contexte',label_visibility='hidden')
 
-    selected_prompt_content = selected_prompt[1]
-    selected_prompt_user = selected_prompt[2]
+    # Trouver le contenu et le créateur (user) du contexte correspondant dans les données récupérées de la base de données
+    #selected_contexte est un tableau à deux éléments :le name et le content du contexte
+    selected_contexte = next(contexte for contexte in rows if contexte['name'] == selected_contexte_name)
 
-    if selected_prompt_user == "":
-        st.write("Ce contexte est en lecture seule, vous pouvez cliquer sur 'créer un nouveau contexte' pour le dupliquer.")
+    selected_contexte_content = selected_contexte['content']
+    selected_contexte_user = selected_contexte['user']
+    selected_contexte_description = selected_contexte['description']
+    selected_contexte_visibility = selected_contexte['visibility']
+
+    if selected_contexte_user !=username:
+        st.write("Ce contexte est en lecture seule, vous pouvez cliquer sur 'créer un nouveau contexte' pour en faire une copie éditable.")
     else:
-        st.write("Créé par : ", selected_prompt_user)
+        st.write("Créé par : ", selected_contexte_user)
+
+    st.write("Description : ", selected_contexte_description)
+    st.write("Visibilité : ", selected_contexte_visibility)
 
     # Remplacer les caractères < et > par leurs entités HTML correspondantes
-    selected_prompt_content = selected_prompt_content.replace('<', '&lt;').replace('>', '&gt;')
-    # Remplacer \n par <br/> dans selected_prompt_content
-    selected_prompt_content = selected_prompt_content.replace('\n', '<br/>')
+    selected_contexte_content = selected_contexte_content.replace('<', '&lt;').replace('>', '&gt;')
+    # Remplacer \n par <br/> dans selected_contexte_content
+    selected_contexte_content = selected_contexte_content.replace('\n', '<br/>')
 
-    # Afficher le contenu du prompt sélectionné dans une zone de texte
-    st.markdown(f'<div class="prompt">{selected_prompt_content}</div>', unsafe_allow_html=True)
-
+    # Afficher le contenu du contexte sélectionné dans une zone de texte
+    st.markdown(f'<div class="contexte">{selected_contexte_content}</div>', unsafe_allow_html=True)
+    st.markdown("---")
 
     ########################################################################################
     # Ajouter un bouton "Modifier le contexte"
-    if selected_prompt_user != "":
-        if st.button('Modifier ce contexte', key='edit_above_prompt'):
+    if selected_contexte_user == username: #seul le créateur du contexte peut le modifier
+        if st.button('Modifier ce contexte', key='edit_above_contexte'):
             #ce drapeau editing est utilisé pour qu'au rechargement de la page, le formulaire d'édition soit affiché
             st.session_state['editing'] = True
 
         if st.session_state.get('editing', False):  #false = valeur par défaut
-            # print("ouverture du formulaire d'édition du prompt sélectionné")
+            # print("ouverture du formulaire d'édition du contexte sélectionné")
 
             with st.form(key='edit_form'):
 
@@ -200,39 +211,50 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
 
                 # Ajouter un bouton "Annuler"
                 cancel_button = st.form_submit_button('Fermer le formulaire sans enregistrer les modifications')
-                # Ajouter un nouveau nom de prompt
-                st.session_state['new_prompt_name'] = st.text_input('Modifier le nom du contexte', value=selected_prompt[0], key='edit_prompt_name')
+                # Ajouter un nouveau nom de contexte
+                st.session_state['new_contexte_name'] = st.text_input('Modifier le nom du contexte', value=selected_contexte['name'], key='edit_contexte_name')
 
-                # Ajouter un nouveau contenu de prompt
-                st.session_state['new_prompt_content'] = st.text_area('Modifier le contexte', value=selected_prompt[1], key='edit_prompt_content', height=500)
+                #ajouter un choix de visibilité (public ou privé)
+                st.session_state['new_contexte_visibility'] = st.radio("Visibilité du contexte", ("public", "private"), key='edit_contexte_visibility',label_visibility='hidden', index=("public", "private").index(selected_contexte['visibility']))
+
+                #ajouter une description du contexte
+                st.session_state['new_contexte_description'] = st.text_input('Description du contexte', value=selected_contexte['description'], key='edit_contexte_description')
+                
+                # Ajouter un nouveau contenu de contexte
+                st.session_state['new_contexte_content'] = st.text_area('Modifier le contexte', value=selected_contexte['content'], key='edit_contexte_content', height=500)
 
             
                 ########################################################################################
 
                 if cancel_button:
-                    # print("cancel edited prompt")
+                    # print("cancel edited contexte")
                     st.session_state['editing'] = False
                     st.experimental_rerun()
 
-                # Sauvegarder les modifications apportées au prompt sélectionné
+                # Sauvegarder les modifications apportées au contexte sélectionné
                 if save_button:
-                    print("save edited prompt")
-                    new_prompt_name = st.session_state.get('new_prompt_name')
-                    new_prompt_content = st.session_state.get('new_prompt_content')
-                    # print(new_prompt_name)
+                    print("save edited contexte")
+                    new_contexte_name = st.session_state.get('new_contexte_name')
+                    new_contexte_content = st.session_state.get('new_contexte_content')
+                    new_contexte_visibility = st.session_state.get('new_contexte_visibility')
+                    new_contexte_description = st.session_state.get('new_contexte_description')
+                    
+                    # print(new_contexte_name)
 
-                    if new_prompt_name.strip() and new_prompt_content.strip():
+                    if new_contexte_name.strip() and new_contexte_content.strip():
                             
                         # Mettre à jour la table
                         query = """
                             UPDATE `qcm.qcm_prompts_openai`
-                            SET name = @new_prompt_name, content = @new_prompt_content
-                            WHERE name = @selected_prompt_name AND user = @username
+                            SET name = @new_contexte_name, content = @new_contexte_content, visibility = @new_contexte_visibility, description = @new_contexte_description
+                            WHERE name = @selected_contexte_name AND user = @username
                         """
                         params = [
-                            bigquery.ScalarQueryParameter('new_prompt_name', 'STRING', new_prompt_name),
-                            bigquery.ScalarQueryParameter('new_prompt_content', 'STRING', new_prompt_content),
-                            bigquery.ScalarQueryParameter('selected_prompt_name', 'STRING', selected_prompt_name),
+                            bigquery.ScalarQueryParameter('new_contexte_name', 'STRING', new_contexte_name),
+                            bigquery.ScalarQueryParameter('new_contexte_content', 'STRING', new_contexte_content),
+                            bigquery.ScalarQueryParameter('new_contexte_visibility', 'STRING', new_contexte_visibility),
+                            bigquery.ScalarQueryParameter('new_contexte_description', 'STRING', new_contexte_description),
+                            bigquery.ScalarQueryParameter('selected_contexte_name', 'STRING', selected_contexte_name),
                             bigquery.ScalarQueryParameter('username', 'STRING', username),
                         ]
                         job_config = bigquery.QueryJobConfig()
@@ -240,12 +262,8 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                         client.query(query, job_config=job_config)
 
                         
-                        print("mise à jour de selected_prompt")
-                        # Mettre à jour le prompt sélectionné
-                        # selected_prompt[0] = new_prompt_name
-                        # selected_prompt[1] = new_prompt_content
-                        #sortir de l'édition du prompt
-                        # print("mise à jour de st.session_state['editing'] à false")
+                        print("mise à jour de selected_contexte")
+      
                         st.session_state['editing'] = False
                         with st.spinner('Mise à jour des données...'):
                             time.sleep(temps_d_attente)
@@ -254,9 +272,9 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
 
     ########################################################################################
 
-    # Ajouter un bouton "Supprimer" seulement s'il y a au moins deux prompts et si on est le créateur du prompt
-    if len(rows) > 1 and selected_prompt_user != "":
-        if st.button('Supprimer ce contexte (n\'oubliez pas de cocher la confirmation)', key='delete_prompt'):
+    # Ajouter un bouton "Supprimer" seulement s'il y a au moins deux contextes et si on est le créateur du contexte
+    if len(rows) > 1 and selected_contexte_user != "":
+        if st.button('Supprimer ce contexte (n\'oubliez pas de cocher la confirmation)', key='delete_contexte'):
             st.session_state['confirm_delete'] = True  # Change this to True
 
     # Si le bouton "Supprimer" a été cliqué, afficher une case à cocher pour la confirmation
@@ -264,18 +282,13 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
         confirm = st.checkbox('Confirmer la suppression', key='confirm_delete_checkbox')
         if confirm:
 
-            # affiche_query = f"""
-            #     DELETE FROM `qcm.qcm_prompts_openai`
-            #     WHERE name = '{selected_prompt_name}' AND user = '{username}'
-            # """
-            # print(affiche_query)
-
+            # Supprimer le contexte sélectionné de la table
             query = """
                 DELETE FROM `qcm.qcm_prompts_openai`
-                WHERE name = @selected_prompt_name AND user = @username
+                WHERE name = @selected_contexte_name AND user = @username
             """
             params = [
-                bigquery.ScalarQueryParameter('selected_prompt_name', 'STRING', selected_prompt_name),
+                bigquery.ScalarQueryParameter('selected_contexte_name', 'STRING', selected_contexte_name),
                 bigquery.ScalarQueryParameter('username', 'STRING', username),
             ]
             job_config = bigquery.QueryJobConfig()
@@ -290,85 +303,98 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
         
 
     ########################################################################################
-    if st.button('Créer un nouveau contexte à partir de celui-là', key="add_new_prompt"):
+    if st.button('Créer un nouveau contexte à partir de celui-là', key="add_new_contexte"):
         #ce drapeau editing est utilisé pour qu'au rechargement de la page, le formulaire d'édition soit affiché
-        st.session_state['form_new_prompt'] = True
+        st.session_state['form_new_contexte'] = True
 
-    if st.session_state.get('form_new_prompt', False):
+    if st.session_state.get('form_new_contexte', False):
 
         with st.form(key='new_form'):
 
             # Ajouter un bouton "Enregistrer"
-            save_button_new_prompt = st.form_submit_button('Enregistrer ce nouveau contexte')
+            save_button_new_contexte = st.form_submit_button('Enregistrer ce nouveau contexte')
 
             # Ajouter un bouton "Annuler"
-            cancel_button_new_prompt = st.form_submit_button('Annuler la création du nouveau contexte')
-           # Ajouter un nouveau nom de prompt (par défaut celui du prompt sélectionné, pour simplifier la duplication)
-            selected_prompt_name = selected_prompt_name + " [copie " + username + "]"
+            cancel_button_new_contexte = st.form_submit_button('Annuler la création du nouveau contexte')
+           # Ajouter un nouveau nom de contexte (par défaut celui du contexte sélectionné, pour simplifier la duplication)
+            selected_contexte_name = selected_contexte_name + " [copie " + username + "]"
+
+            #ajouter un choix de visibilité (public ou privé)
+            st.session_state['new_contexte_visibility'] = st.radio("Visibilité du contexte", ("public", "privé"), key='edit_new_contexte_visibility',label_visibility='hidden')
+
+            #ajouter une description du contexte
+            st.session_state['new_contexte_description'] = st.text_input('Description du contexte', value=selected_contexte_description, key='edit_new_contexte_description')
             
-            st.session_state['new_prompt_name'] = st.text_input('Nom du contexte', value=selected_prompt_name, key='edit_new_prompt_name')
+            # Ajouter un nouveau nom de contexte
+            st.session_state['new_contexte_name'] = st.text_input('Nom du contexte', value=selected_contexte_name, key='edit_new_contexte_name')
 
-            # Ajouter un nouveau contenu de prompt (par défault celui du prompt sélectionné, pour simplifier la duplication)
-            st.session_state['new_prompt_content'] = st.text_area('Contenu du contexte', value=selected_prompt_content, key='edit_new_prompt_content', height=500)
+            # Ajouter un nouveau contenu de contexte (par défault celui du contexte sélectionné, pour simplifier la duplication)
+            st.session_state['new_contexte_content'] = st.text_area('Contenu du contexte', value=selected_contexte_content, key='edit_new_contexte_content', height=500)
 
-        
+           
             ########################################################################################
 
-            if cancel_button_new_prompt:
-                st.session_state['form_new_prompt'] = False
+            if cancel_button_new_contexte:
+                st.session_state['form_new_contexte'] = False
                 st.experimental_rerun()
 
-            # Sauvegarder le nouveau prompt
-            if save_button_new_prompt:
-                new_prompt_name = st.session_state.get('new_prompt_name')
-                new_prompt_content = st.session_state.get('new_prompt_content')
-                # print(new_prompt_name)
+            # Sauvegarder le nouveau contexte
+            if save_button_new_contexte:
+                new_contexte_name = st.session_state.get('new_contexte_name')
+                new_contexte_content = st.session_state.get('new_contexte_content')
+                new_contexte_visibility = st.session_state.get('new_contexte_visibility')
+                new_contexte_description = st.session_state.get('new_contexte_description')
+                # print(new_contexte_name)
 
                 # Vérifier si une entrée avec le même name et user existe déjà
                 query = """
                     SELECT * FROM `qcm.qcm_prompts_openai`
-                    WHERE name = @new_prompt_name 
+                    WHERE name = @new_contexte_name 
                 """
                 params = [
-                    bigquery.ScalarQueryParameter('new_prompt_name', 'STRING', new_prompt_name),                    
+                    bigquery.ScalarQueryParameter('new_contexte_name', 'STRING', new_contexte_name),                    
                 ]
                 job_config = bigquery.QueryJobConfig()
                 job_config.query_parameters = params
+                
                 results = client.query(query, job_config=job_config)
                 rows = list(results.result())
                 existing_entry = rows[0] if rows else None
 
-                if new_prompt_name.strip() and new_prompt_content.strip() and not existing_entry:
+                if new_contexte_name.strip() and new_contexte_content.strip() and not existing_entry:
                 
-                    # # Ajouter le nouveau prompt à la liste des prompts
-                    # data.append({'name': new_prompt_name, 'content': new_prompt_content})
+                    # # Ajouter le nouveau contexte à la liste des contextes
+                    # data.append({'name': new_contexte_name, 'content': new_contexte_content})
 
                     # # Sauvegarder les données dans le fichier JSON
-                    # with open('prompts.json', 'w') as f:
+                    # with open('contextes.json', 'w') as f:
                     #     json.dump(data, f)
 
                     query = """
-                        INSERT INTO `test-big-query-janv-2019.qcm.qcm_prompts_openai` (name, content, user)
-                        VALUES (@new_prompt_name, @new_prompt_content, @username)
+                        INSERT INTO `test-big-query-janv-2019.qcm.qcm_prompts_openai` (name, content, user, visibility, description)
+                        VALUES (@new_contexte_name, @new_contexte_content, @username, @new_contexte_visibility, @new_contexte_description)
                     """
                     params = [
-                        bigquery.ScalarQueryParameter('new_prompt_name', 'STRING', new_prompt_name),
-                        bigquery.ScalarQueryParameter('new_prompt_content', 'STRING', new_prompt_content),
+                        bigquery.ScalarQueryParameter('new_contexte_name', 'STRING', new_contexte_name),
+                        bigquery.ScalarQueryParameter('new_contexte_content', 'STRING', new_contexte_content),
                         bigquery.ScalarQueryParameter('username', 'STRING', username),
+                        bigquery.ScalarQueryParameter('new_contexte_visibility', 'STRING', new_contexte_visibility),
+                        bigquery.ScalarQueryParameter('new_contexte_description', 'STRING', new_contexte_description),
                     ]
                     job_config = bigquery.QueryJobConfig()
                     job_config.query_parameters = params
                     client.query(query, job_config=job_config)
 
-                    st.session_state['form_new_prompt'] = False
+                    st.session_state['form_new_contexte'] = False
                     with st.spinner('Mise à jour des données...'):
                         time.sleep(temps_d_attente)
-                    st.experimental_rerun() #forcer le rechargement de la page pour masquer le formulaire de création de prompt
+                    st.experimental_rerun() #forcer le rechargement de la page pour masquer le formulaire de création de contexte
 
 
 
 
     ########################################################################################
+    st.markdown("---")
     st.subheader("Générer un quiz avec ces paramètres")
 
     num_questions_per_page = st.number_input('Nombre de questions à générer, par page du pdf ou du texte', min_value=1, max_value=10, value=1, step=1)
@@ -386,7 +412,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                 with st.spinner("Génération du quizz..."):
                     with open(f"data/{uploaded_file.name}", "wb") as f:
                         f.write(uploaded_file.getvalue())        
-                        st.session_state['contexte']=selected_prompt['content']
+                        st.session_state['contexte']=selected_contexte['content']
                         st.session_state['questions'] = asyncio.run(pdf_to_quizz(f"data/{uploaded_file.name}",))
 
     else:
@@ -395,7 +421,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
         if (st.button("Générer Quiz à partir du texte", key=f"button_generer_from_text")):
             if txt is not None:
                 with st.spinner("Génération du quizz..."):
-                    st.session_state['contexte']=selected_prompt_content
+                    st.session_state['contexte']=selected_contexte_content
                     st.session_state['questions'] = asyncio.run(txt_to_quizz(txt))
 
 
@@ -490,7 +516,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                                 option_D = html.escape(option_D)
 
                                 # Construire le QTI pour cette question
-                                qti = f'<assessmentItem label="qcm"><responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="identifier"><correctResponse>{"".join([f"<value>{value}</value>" for value in correct_responses])}</correctResponse></responseDeclaration><itemBody><choiceInteraction responseIdentifier="RESPONSE" shuffle="false" maxChoices="0"><prompt>{question}</prompt><simpleChoice identifier="1">{option_A}</simpleChoice><simpleChoice identifier="2">{option_B}</simpleChoice><simpleChoice identifier="3">{option_C}</simpleChoice><simpleChoice identifier="4">{option_D}</simpleChoice></choiceInteraction></itemBody></assessmentItem>'
+                                qti = f'<assessmentItem label="qcm"><responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="identifier"><correctResponse>{"".join([f"<value>{value}</value>" for value in correct_responses])}</correctResponse></responseDeclaration><itemBody><choiceInteraction responseIdentifier="RESPONSE" shuffle="false" maxChoices="0"><contexte>{question}</contexte><simpleChoice identifier="1">{option_A}</simpleChoice><simpleChoice identifier="2">{option_B}</simpleChoice><simpleChoice identifier="3">{option_C}</simpleChoice><simpleChoice identifier="4">{option_D}</simpleChoice></choiceInteraction></itemBody></assessmentItem>'
 
                                 # Échapper les apostrophes dans le QTI
                                 qti = qti.replace("'", "\\'")
