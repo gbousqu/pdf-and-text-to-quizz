@@ -11,7 +11,7 @@ from langchain.prompts import PromptTemplate
 
 import streamlit as st
 
-
+import re
 
 
 #DERNIERE VERSION FONCTIONNELLE
@@ -80,7 +80,7 @@ class QCMGenerateChain(LLMChain):
 
             for i in range(1, num_questions_per_page+1):
                 output_keys.extend([f"question{i}", f"A_{i}", f"B_{i}", f"C_{i}", f"D_{i}", f"reponse{i}"])
-            chaine_regex = r"\n\n?".join(f"Question {i}:\n*(.*?)\n+CHOICE_A:(.*?)\nCHOICE_B:(.*?)\nCHOICE_C:(.*?)\nCHOICE_D:(.*?)\n\n?Answer: ?(.*?)" for i in range(1, num_questions_per_page+1))
+            chaine_regex = "\n\n?".join(f"Question {i}:\n*(.*?)\n+CHOICE_A:(.*?)\nCHOICE_B:(.*?)\nCHOICE_C:(.*?)\nCHOICE_D:(.*?)\n\n?Answer: ?(.*?)" for i in range(1, num_questions_per_page+1))
             chaine_regex += "$" #pour être sûr de récupérer la réponse de la dernière question
 
         elif (type_question == "Vrai/Faux"):
@@ -88,12 +88,13 @@ class QCMGenerateChain(LLMChain):
 
             for i in range(1, num_questions_per_page+1):
                 output_keys.extend([f"question{i}", f"reponse{i}", f"explication{i}"])
-            chaine_regex = r"\n\n?".join(f"Question {i}:\n*(.*?)\n\n?Answer: ?(.*?)\n\n?Explanation: ?(.*?)" for i in range(1, num_questions_per_page+1))
-            chaine_regex += "$"
+                chaine_regex = "\n\n?".join([f"Question {i}:\n*([\s\S]*?)\n\n?Answer: ?([\s\S]*?)\n\n?Explanation: ?([\s\S]*?)" for i in range(1, num_questions_per_page+1)])
+                chaine_regex += "$" #pour être sûr de récupérer la réponse de la dernière question
 
         print("\n chaine regex: \n", repr(chaine_regex))
         print("\n output_keys: \n", output_keys)
         print("\n")        
+
 
         output_parser = RegexParser(
             regex=chaine_regex,

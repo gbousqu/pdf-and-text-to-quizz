@@ -93,10 +93,10 @@ else:
     #             st.session_state["type_question"] = "QCM avec une réponse correcte"
     # else :
     st.session_state["type_question"]=type_question
-    print("\n type_question: ", type_question)
+    # print("\n type_question: ", type_question)
 
     if type_question == "QCM avec une réponse correcte": 
-            print("QCM avec une réponse correcte")
+            # print("QCM avec une réponse correcte")
             format_question ="""
 Les questions seront de type QCM avec quatre options. Parmi les quatre options proposées, une seule option est vraie, les autres sont fausses.
 La réponse (answer) devra être la lettre correspondant à la réponse correcte.
@@ -112,7 +112,7 @@ Chaque question doit être détaillée
 La question et les options seront en français, mais garde en anglais les mots CHOICE et answer dans le modèle ci-dessus."""
 
     elif type_question == "QCM avec 1,2 ou 3 réponses correctes":
-        print("QCM avec plusieurs réponses correctes")
+        # print("QCM avec plusieurs réponses correctes")
         format_question = """
 Les question seront de type QCM avec quatre options .
 Parmi les quatre options, deux ou trois doivent être correctes.
@@ -177,20 +177,26 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
     selected_contexte_description = selected_contexte['description']
     selected_contexte_visibility = selected_contexte['visibility']
 
-    if selected_contexte_user !=username:
+    if selected_contexte_user != username:
         st.write("Ce contexte est en lecture seule, vous pouvez cliquer sur 'créer un nouveau contexte' pour en faire une copie éditable.")
     else:
         st.write("Créé par : ", selected_contexte_user)
 
-    st.write("Description : ", selected_contexte_description)
     st.write("Visibilité : ", selected_contexte_visibility)
+
+    if selected_contexte_description is not None:
+        selected_contexte_description = html.escape(selected_contexte_description)
+    st.markdown("Description du contexte:")
+    st.markdown(f'<div class="contexte" style="white-space: pre-wrap; margin-bottom:20px">{selected_contexte_description}</div>', unsafe_allow_html=True)
+
 
     # Remplacer les caractères < et > par leurs entités HTML correspondantes
     selected_contexte_content = selected_contexte_content.replace('<', '&lt;').replace('>', '&gt;')
     # Remplacer \n par <br/> dans selected_contexte_content
     selected_contexte_content = selected_contexte_content.replace('\n', '<br/>')
 
-    # Afficher le contenu du contexte sélectionné dans une zone de texte
+    # Afficher le contenu du contexte sélectionné dans une zone de texte    
+    st.markdown("Contenu du contexte:")
     st.markdown(f'<div class="contexte">{selected_contexte_content}</div>', unsafe_allow_html=True)
     st.markdown("---")
 
@@ -218,7 +224,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                 st.session_state['new_contexte_visibility'] = st.radio("Visibilité du contexte", ("public", "private"), key='edit_contexte_visibility',label_visibility='hidden', index=("public", "private").index(selected_contexte['visibility']))
 
                 #ajouter une description du contexte
-                st.session_state['new_contexte_description'] = st.text_input('Description du contexte', value=selected_contexte['description'], key='edit_contexte_description')
+                st.session_state['new_contexte_description'] = st.text_area('Description du contexte', value=selected_contexte['description'], key='edit_contexte_description',height=500)
                 
                 # Ajouter un nouveau contenu de contexte
                 st.session_state['new_contexte_content'] = st.text_area('Modifier le contexte', value=selected_contexte['content'], key='edit_contexte_content', height=500)
@@ -233,7 +239,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
 
                 # Sauvegarder les modifications apportées au contexte sélectionné
                 if save_button:
-                    print("save edited contexte")
+                    # print("save edited contexte")
                     new_contexte_name = st.session_state.get('new_contexte_name')
                     new_contexte_content = st.session_state.get('new_contexte_content')
                     new_contexte_visibility = st.session_state.get('new_contexte_visibility')
@@ -262,7 +268,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                         client.query(query, job_config=job_config)
 
                         
-                        print("mise à jour de selected_contexte")
+                        # print("mise à jour de selected_contexte")
       
                         st.session_state['editing'] = False
                         with st.spinner('Mise à jour des données...'):
@@ -494,35 +500,52 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                         for i, question_data in enumerate(json_questions):
                             # Vérifier si la case à cocher pour cette question est sélectionnée
                             if st.session_state.get(f"checkbox_{i+1}"):
+
+                                if type_question=="QCM avec une réponse correcte" or type_question =="QCM avec 1,2 ou 3 réponses correctes": 
                                 # Obtenir les valeurs des zones de texte pour cette question
-                                option_A = st.session_state.get(f"option_A_{i+1}")
-                                option_B = st.session_state.get(f"option_B_{i+1}")
-                                option_C = st.session_state.get(f"option_C_{i+1}")
-                                option_D = st.session_state.get(f"option_D_{i+1}")
-                                reponse = st.session_state.get(f"reponse_{i+1}")
-                                
-                                # Convertir la réponse en une liste de lettres
-                                correct_responses_letters = reponse.split(',')
-                                # Créer un dictionnaire pour mapper les lettres aux nombres
-                                letter_to_number = {'A': '1', 'B': '2', 'C': '3', 'D': '4'}
-                                # Convertir les lettres en nombres
-                                correct_responses = [letter_to_number[letter] for letter in correct_responses_letters]
+                                    option_A = st.session_state.get(f"option_A_{i+1}")
+                                    option_B = st.session_state.get(f"option_B_{i+1}")
+                                    option_C = st.session_state.get(f"option_C_{i+1}")
+                                    option_D = st.session_state.get(f"option_D_{i+1}")
+                                    reponse = st.session_state.get(f"reponse_{i+1}")
+                                    
+                                    # Convertir la réponse en une liste de lettres
+                                    correct_responses_letters = reponse.split(',')
+                                    # Créer un dictionnaire pour mapper les lettres aux nombres
+                                    letter_to_number = {'A': '1', 'B': '2', 'C': '3', 'D': '4'}
+                                    # Convertir les lettres en nombres
+                                    correct_responses = [letter_to_number[letter] for letter in correct_responses_letters]
 
-                                question = st.session_state.get(f"question_{i+1}")
-                                question = html.escape(question)
-                                option_A = html.escape(option_A)
-                                option_B = html.escape(option_B)
-                                option_C = html.escape(option_C)
-                                option_D = html.escape(option_D)
+                                    question = st.session_state.get(f"question_{i+1}")
+                                    question = html.escape(question)
+                                    option_A = html.escape(option_A)
+                                    option_B = html.escape(option_B)
+                                    option_C = html.escape(option_C)
+                                    option_D = html.escape(option_D)
 
-                                # Construire le QTI pour cette question
-                                qti = f'<assessmentItem label="qcm"><responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="identifier"><correctResponse>{"".join([f"<value>{value}</value>" for value in correct_responses])}</correctResponse></responseDeclaration><itemBody><choiceInteraction responseIdentifier="RESPONSE" shuffle="false" maxChoices="0"><contexte>{question}</contexte><simpleChoice identifier="1">{option_A}</simpleChoice><simpleChoice identifier="2">{option_B}</simpleChoice><simpleChoice identifier="3">{option_C}</simpleChoice><simpleChoice identifier="4">{option_D}</simpleChoice></choiceInteraction></itemBody></assessmentItem>'
+                                    # Construire le QTI pour cette question
+                                    qti = f'<assessmentItem label="qcm"><responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="identifier"><correctResponse>{"".join([f"<value>{value}</value>" for value in correct_responses])}</correctResponse></responseDeclaration><itemBody><choiceInteraction responseIdentifier="RESPONSE" shuffle="false" maxChoices="0"><contexte>{question}</contexte><simpleChoice identifier="1">{option_A}</simpleChoice><simpleChoice identifier="2">{option_B}</simpleChoice><simpleChoice identifier="3">{option_C}</simpleChoice><simpleChoice identifier="4">{option_D}</simpleChoice></choiceInteraction></itemBody></assessmentItem>'
 
-                                # Échapper les apostrophes dans le QTI
-                                qti = qti.replace("'", "\\'")
+                                    # Échapper les apostrophes dans le QTI
+                                    qti = qti.replace("'", "\\'")
 
-                                # Ajouter les valeurs à la liste
-                                values.append(f"('', '{qti}', '{now}', '{now}')")
+                                    # Ajouter les valeurs à la liste
+                                    values.append(f"('', '{qti}', '{now}', '{now}')")
+                                else: #cas du V/F
+                                    reponse = st.session_state.get(f"reponse_{i+1}")
+                                    explication = st.session_state.get(f"explication_{i+1}")
+                                    question = st.session_state.get(f"question_{i+1}")
+                                    question = html.escape(question)
+                                    reponse = reponse.lower().replace("vrai", "1").replace("faux", "2")      
+                                    explication = html.escape(explication)
+
+                                    # Construire le QTI pour cette question
+
+                                    qti = f'<assessmentItem label="qcm"><responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="identifier"><correctResponse><value>{reponse}</value></correctResponse></responseDeclaration><itemBody><choiceInteraction responseIdentifier="RESPONSE" shuffle="false" maxChoices="0"><prompt>{question}</prompt><simpleChoice identifier="1">V</simpleChoice><simpleChoice identifier="2">F</simpleChoice></choiceInteraction></itemBody></assessmentItem>'                                    # Échapper les apostrophes dans le QTI
+                                    qti = qti.replace("'", "\\'")
+
+                                    # Ajouter les valeurs à la liste
+                                    values.append(f"('', '{qti}', '{now}', '{now}')")
                         # Créer la requête SQL
                         query = f"INSERT INTO questions (image, qti, date_creation, date_modification) VALUES {', '.join(values)};"
 
