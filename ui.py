@@ -230,7 +230,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                 st.session_state['new_contexte_name'] = st.text_input('Modifier le nom du contexte', value=selected_contexte['name'], key='edit_contexte_name')
 
                 #ajouter un choix de visibilité (public ou privé)
-                st.session_state['new_contexte_visibility'] = st.radio("Visibilité du contexte", ("public", "private"), key='edit_contexte_visibility',label_visibility='hidden', index=("public", "private").index(selected_contexte['visibility']))
+                st.session_state['new_contexte_visibility'] = st.radio("Visibilité du contexte", ("public", "private"), key='edit_modify_contexte_visibility',label_visibility='hidden', index=("public", "private").index(selected_contexte['visibility']))
 
                 #ajouter une description du contexte
                 st.session_state['new_contexte_description'] = st.text_area('Description du contexte', value=selected_contexte['description'], key='edit_contexte_description',height=500)
@@ -335,7 +335,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
             selected_contexte_name = selected_contexte_name + " [copie " + username + "]"
 
             #ajouter un choix de visibilité (public ou privé)
-            st.session_state['new_contexte_visibility'] = st.radio("Visibilité du contexte", ("public", "private"), key='edit_contexte_visibility',label_visibility='hidden', index=("public", "private").index(selected_contexte['visibility']))
+            st.session_state['new_contexte_visibility'] = st.radio("Visibilité du contexte", ("public", "private"), key='edit_new_contexte_visibility',label_visibility='hidden', index=("public", "private").index(selected_contexte['visibility']))
 
             #ajouter une description du contexte
             st.session_state['new_contexte_description'] = st.text_area('Description du contexte', value=selected_contexte['description'], key='edit_contexte_description',height=500)
