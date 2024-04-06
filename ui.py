@@ -331,8 +331,12 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
 
             # Ajouter un bouton "Annuler"
             cancel_button_new_contexte = st.form_submit_button('Annuler la création du nouveau contexte')
+
            # Ajouter un nouveau nom de contexte (par défaut celui du contexte sélectionné, pour simplifier la duplication)
             selected_contexte_name = selected_contexte_name + " [copie " + username + "]"
+            # Ajouter un nouveau nom de contexte
+            st.session_state['new_contexte_name'] = st.text_input('nom du contexte', value=selected_contexte['name'], key='edit_new_contexte_name')
+
 
             #ajouter un choix de visibilité (public ou privé)
             st.session_state['new_contexte_visibility'] = st.radio("Visibilité du contexte", ("public", "private"), key='edit_new_contexte_visibility',label_visibility='hidden', index=("public", "private").index(selected_contexte['visibility']))
