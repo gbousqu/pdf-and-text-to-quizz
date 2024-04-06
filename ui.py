@@ -417,7 +417,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
     st.session_state['num_questions_per_page'] = num_questions_per_page
 
     # Create radio button for selecting input method
-    input_method = st.radio("Sélectionnez la méthode d'entrée pour le document à partir duquel on générera le quiz :", ("Upload de fichier", "Texte"))
+    input_method = st.radio("Sélectionnez la méthode d'entrée pour le document à partir duquel on générera le quiz :", ("Upload de fichier", "Ou collage direct du exte"))
 
     if input_method == "Upload de fichier":
         # Upload PDF file
@@ -433,9 +433,18 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
 
     else:
         # Text input
-        txt = st.text_area('Taper le texte à partir duquel vous voulez générer le quiz')
-        if (st.button("Générer Quiz à partir du texte", key=f"button_generer_from_text")):
-            if txt is not None:
+        # Initialiser le texte du text_area dans le session state si ce n'est pas déjà fait
+        if 'txt' not in st.session_state:
+            st.session_state['txt'] = ''
+
+        # Utiliser la valeur du session state pour le text_area
+        txt = st.text_area('Taper le texte à partir duquel vous voulez générer le quiz', value=st.session_state['txt'])
+
+        # Mettre à jour la valeur du session state lorsque le texte est modifié
+        st.session_state['txt'] = txt
+
+        if st.button("Générer le Quiz à partir du texte", key=f"button_generer_from_text"):
+            if txt != "":
                 with st.spinner("Génération du quizz..."):
                     st.session_state['contexte']=selected_contexte_content
                     st.session_state['questions'] = asyncio.run(txt_to_quizz(txt))
