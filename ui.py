@@ -82,7 +82,7 @@ if not st.session_state.get('logged_in', False):
                     # Si c'est le cas, définir 'logged_in' à True dans l'état de session
                     st.session_state['username'] = username
                     st.session_state['logged_in'] = True
-                    st.rerun()
+                    st.experimental_rerun()
             if st.session_state.get('logged_in', False) == False:
                 # Si aucune correspondance n'a été trouvée, afficher un message d'erreur
                 st.error('Nom d\'utilisateur ou mot de passe incorrect.')
@@ -255,7 +255,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                 if cancel_button:
                     # print("cancel edited contexte")
                     st.session_state['editing'] = False
-                    st.rerun()
+                    st.experimental_rerun()
 
                 # Sauvegarder les modifications apportées au contexte sélectionné
                 if save_button:
@@ -293,7 +293,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                         st.session_state['editing'] = False
                         with st.spinner('Mise à jour des données...'):
                             time.sleep(temps_d_attente)
-                        st.rerun()
+                        st.experimental_rerun()
 
 
     ########################################################################################
@@ -325,7 +325,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
             st.session_state['confirm_delete'] = False
             with st.spinner('Mise à jour des données...'):
                 time.sleep(temps_d_attente)
-            st.rerun() 
+            st.experimental_rerun() 
         
 
     ########################################################################################
@@ -363,7 +363,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
 
             if cancel_button_new_contexte:
                 st.session_state['form_new_contexte'] = False
-                st.rerun()
+                st.experimental_rerun()
 
             # Sauvegarder le nouveau contexte
             if save_button_new_contexte:
@@ -415,7 +415,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                     st.session_state['form_new_contexte'] = False
                     with st.spinner('Mise à jour des données...'):
                         time.sleep(temps_d_attente)
-                    st.rerun() #forcer le rechargement de la page pour masquer le formulaire de création de contexte
+                    st.experimental_rerun() #forcer le rechargement de la page pour masquer le formulaire de création de contexte
 
 
 
