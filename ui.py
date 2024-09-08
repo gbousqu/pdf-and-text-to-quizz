@@ -36,12 +36,10 @@ if "bigquery_client" not in st.session_state:
 client = st.session_state.bigquery_client
 
 # Déterminer si l'application est en cours d'exécution sur Streamlit Sharing
-is_streamlit_sharing = st.secrets.get("is_streamlit_sharing", False)
+# is_streamlit_sharing = st.secrets.get("is_streamlit_sharing", False)
 
 json_string = st.secrets["secret_json"].replace('\\\\', '\\')
 secret_data = json.loads(json_string)
-
-
 
 
 # if is_streamlit_sharing:
@@ -416,10 +414,18 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
     num_questions_per_page = st.number_input('Nombre de questions à générer, par page du pdf ou du texte', min_value=1, max_value=10, value=1, step=1)
     st.session_state['num_questions_per_page'] = num_questions_per_page
 
-    # Create radio button for selecting input method
-    input_method = st.radio("Sélectionnez la méthode d'entrée pour le document à partir duquel on générera le quiz :", ("Upload de fichier", "Ou collage direct du exte"))
+    # Initialiser le choix de la méthode d'entrée dans le session state si ce n'est pas déjà fait
+    if 'input_method' not in st.session_state:
+        st.session_state['input_method'] = "Upload de fichier"
 
-    if input_method == "Upload de fichier":
+    # Utiliser la valeur du session state pour le radio button
+    input_method = st.radio("Sélectionnez la méthode d'entrée pour le document à partir duquel on générera le quiz :", ("Upload de fichier", "Ou collage direct du texte"))
+
+    # Mettre à jour la valeur du session state si le choix de l'utilisateur a changé
+    if st.session_state['input_method'] != input_method:
+        st.session_state['input_method'] = input_method
+
+    if st.session_state['input_method'] == "Upload de fichier":
         # Upload PDF file
 
         uploaded_file = st.file_uploader(":female-student:", type=["pdf"])
