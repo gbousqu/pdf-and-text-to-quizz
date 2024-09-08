@@ -474,7 +474,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
     if ('questions' in st.session_state) :
     #les questions ont été générées      
             # st.write("Les questions ont été générées avec succès.")
-            st.write("voici les questions :", st.session_state['questions'])
+            # st.write("voici les questions :", st.session_state['questions'])
            
             with st.spinner("Génération du quizz ..."):
                 json_questions = st.session_state['questions']
