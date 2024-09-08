@@ -1,5 +1,7 @@
 import asyncio
-from langchain.document_loaders import PyPDFLoader
+# from langchain.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader
+
 from quizz_generator import generate_quizz
 from ui_utils import transform
 
@@ -62,4 +64,5 @@ async def pdf_to_quizz(pdf_file_name):
         except Exception as e:
             print(f"Error: {e}")
 
+    return all_questions
     return all_questions

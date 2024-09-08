@@ -25,6 +25,17 @@ temps_d_attente = 2 #pour attendre que bigquery se mette à jour après modifica
 if "bigquery_client" not in st.session_state:
     # credentials = service_account.Credentials.from_service_account_file("test-big-query-janv-2019-b5e01a71ad8e.json")
     # Charger les informations du compte de service à partir des secrets de Streamlit
+
+    #Les informations du compte de service Google Permettant d'accéder  à la base de données bigquery 
+    # ces informations sont stockées dans le fichier secrets.toml du dossier .streamlit
+    # Elles sont récupérées et stockées dans la variable gcp_service_account
+    #et ensuite utilisées pour créer un client BigQuery
+    #et le fichier secrets.toml est invisible dans la version en ligne sur github car son nom est dans .gitignore
+
+    #dans bigquery, on a une table qcm_prompts_openai qui contient les contextes et les prompts
+    #les contextes sont les textes à partir desquels on génère les questions sont propres à chaque utilisateur de l'appli
+    #ou peuvent être publics
+
     gcp_service_account = st.secrets["gcp_service_account"]
     service_account_info = json.loads(gcp_service_account)
     # Créer des identifiants à partir des informations du compte de service
@@ -33,11 +44,13 @@ if "bigquery_client" not in st.session_state:
     client = bigquery.Client(credentials=credentials)
     st.session_state.bigquery_client = bigquery.Client(credentials=credentials)
 
+
 client = st.session_state.bigquery_client
 
 # Déterminer si l'application est en cours d'exécution sur Streamlit Sharing
 # is_streamlit_sharing = st.secrets.get("is_streamlit_sharing", False)
 
+#secrets.toml contient une ligne avec un objet secret_json qui contient les informations de connexion des utilisateurs autorisés à utiliser l'application
 json_string = st.secrets["secret_json"].replace('\\\\', '\\')
 secret_data = json.loads(json_string)
 
@@ -69,7 +82,7 @@ if not st.session_state.get('logged_in', False):
                     # Si c'est le cas, définir 'logged_in' à True dans l'état de session
                     st.session_state['username'] = username
                     st.session_state['logged_in'] = True
-                    st.experimental_rerun()
+                    st.rerun()
             if st.session_state.get('logged_in', False) == False:
                 # Si aucune correspondance n'a été trouvée, afficher un message d'erreur
                 st.error('Nom d\'utilisateur ou mot de passe incorrect.')
@@ -242,7 +255,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                 if cancel_button:
                     # print("cancel edited contexte")
                     st.session_state['editing'] = False
-                    st.experimental_rerun()
+                    st.rerun()
 
                 # Sauvegarder les modifications apportées au contexte sélectionné
                 if save_button:
@@ -256,7 +269,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
 
                     if new_contexte_name.strip() and new_contexte_content.strip():
                             
-                        # Mettre à jour la table
+                        # Mettre à jour la table qcm_prompts_openai de la base de données qcm dans bigquery
                         query = """
                             UPDATE `qcm.qcm_prompts_openai`
                             SET name = @new_contexte_name, content = @new_contexte_content, visibility = @new_contexte_visibility, description = @new_contexte_description
@@ -280,7 +293,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                         st.session_state['editing'] = False
                         with st.spinner('Mise à jour des données...'):
                             time.sleep(temps_d_attente)
-                        st.experimental_rerun()
+                        st.rerun()
 
 
     ########################################################################################
@@ -312,7 +325,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
             st.session_state['confirm_delete'] = False
             with st.spinner('Mise à jour des données...'):
                 time.sleep(temps_d_attente)
-            st.experimental_rerun() 
+            st.rerun() 
         
 
     ########################################################################################
@@ -350,7 +363,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
 
             if cancel_button_new_contexte:
                 st.session_state['form_new_contexte'] = False
-                st.experimental_rerun()
+                st.rerun()
 
             # Sauvegarder le nouveau contexte
             if save_button_new_contexte:
@@ -402,7 +415,7 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                     st.session_state['form_new_contexte'] = False
                     with st.spinner('Mise à jour des données...'):
                         time.sleep(temps_d_attente)
-                    st.experimental_rerun() #forcer le rechargement de la page pour masquer le formulaire de création de contexte
+                    st.rerun() #forcer le rechargement de la page pour masquer le formulaire de création de contexte
 
 
 
@@ -439,34 +452,37 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
 
     else:
         # Text input
-        # Initialiser le texte du text_area dans le session state si ce n'est pas déjà fait
+        # Initialiser une variable txt  du session_state si ce n'est pas déjà fait
         if 'txt' not in st.session_state:
             st.session_state['txt'] = ''
 
-        # Utiliser la valeur du session state pour le text_area
+        # Utiliser la valeur du text_area pour renseigner la variable txt
         txt = st.text_area('Taper le texte à partir duquel vous voulez générer le quiz', value=st.session_state['txt'])
 
-        # Mettre à jour la valeur du session state lorsque le texte est modifié
+        # Mettre à jour la valeur du session_state lorsque le texte est modifié
         st.session_state['txt'] = txt
 
         if st.button("Générer le Quiz à partir du texte", key=f"button_generer_from_text"):
             if txt != "":
                 with st.spinner("Génération du quizz..."):
                     st.session_state['contexte']=selected_contexte_content
-                    st.session_state['questions'] = asyncio.run(txt_to_quizz(txt))
+                    #c'est là qu'on appelle la fonction qui génère les questions avec openAI
+                    asyncio.run(txt_to_quizz(txt))
+                    # st.session_state['questions'] = asyncio.run(txt_to_quizz(txt))
 
 
-    if ('questions' in st.session_state):
+    if ('questions' in st.session_state) :
     #les questions ont été générées      
-
-        # Display question   #neutralisé pour l'instant (bousquet)
-        # count = 0
-        # for json_question in st.session_state['questions']:
-        #     build_question(count, json_question)
-            
+            # st.write("Les questions ont été générées avec succès.")
+            st.write("voici les questions :", st.session_state['questions'])
+           
             with st.spinner("Génération du quizz ..."):
                 json_questions = st.session_state['questions']
-                # save into a file
+
+              # Debug: Afficher le contenu de json_questions
+                # st.write("Contenu de json_questions:", json_questions)
+
+                 # Pour la Sauvegarde des questions dans un fichier
                 now = datetime.now()
                 date_suffix = now.strftime("%Y_%m_%d_%H_%M_%S") 
                 if 'uploaded_file' in globals() or 'uploaded_file' in locals():
@@ -479,15 +495,19 @@ La question sera en français, mais garde en anglais les mots Answer et Explanat
                     now = datetime.now()
                     file_name = date_suffix  #  pour le cas où on fournit du texte
 
-
-                # remove extension .pdf from file name
+                # Retirer l'extension .pdf du nom de fichier
                 if file_name.endswith(".pdf"):
                     file_name = file_name[:-4]   
 
-                line_height = 60 # Adjust this value to change the height of each line
-                num_charac_per_line = 90 # Adjust this value to change the number of characters per line
+               
+                line_height = 60  # Ajuster cette valeur pour changer la hauteur de chaque ligne
+                num_charac_per_line = 90  # Ajuster cette valeur pour changer le nombre de caractères par ligne
+
                 with st.form(key='edit_quiz'):
                     for i, question_data in enumerate(json_questions):
+                        # Debug: Afficher l'indice et le contenu de chaque question
+                        # st.write(f"Indice: {i}, Question: {question_data}")
+        
                         st.checkbox(f"Sélectionner cette question", key=f"checkbox_{i+1}",value=True)
                         num_lines_question = len(question_data["question"]) // num_charac_per_line + 1
 

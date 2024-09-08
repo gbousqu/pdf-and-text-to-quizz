@@ -80,15 +80,15 @@ class QCMGenerateChain(LLMChain):
 
             for i in range(1, num_questions_per_page+1):
                 output_keys.extend([f"question{i}", f"A_{i}", f"B_{i}", f"C_{i}", f"D_{i}", f"reponse{i}"])
-            chaine_regex = "\n\n?".join(f"Question {i} *:\n*(.*?)\n+CHOICE_A:(.*?)\nCHOICE_B:(.*?)\nCHOICE_C:(.*?)\nCHOICE_D:(.*?)\n\n?Answer: ?(.*?)" for i in range(1, num_questions_per_page+1))
-            chaine_regex += "$" #pour être sûr de récupérer la réponse de la dernière question
+                chaine_regex = r"\n\n?".join(rf"Question {i} *:\n*(.*?)\n+CHOICE_A:(.*?)\nCHOICE_B:(.*?)\nCHOICE_C:(.*?)\nCHOICE_D:(.*?)\n\n?Answer: ?(.*?)" for i in range(1, num_questions_per_page+1))
+                chaine_regex += "$" #pour être sûr de récupérer la réponse de la dernière question
 
         elif (type_question == "Vrai/Faux"):
             output_keys = []
 
             for i in range(1, num_questions_per_page+1):
                 output_keys.extend([f"question{i}", f"reponse{i}", f"explication{i}"])
-                chaine_regex = r"\n\n?".join([f"Question {i} *: *\n*([\s\S]*?)\n\n?Answer: *([\s\S]*?)\n\n?Explanation: *([\s\S]*?)" for i in range(1, num_questions_per_page+1)])
+                chaine_regex = r"\n\n?".join([rf"Question {i} *: *\n*([\s\S]*?)\n\n?Answer: *([\s\S]*?)\n\n?Explanation: *([\s\S]*?)" for i in range(1, num_questions_per_page+1)])
                 chaine_regex += "$" #pour être sûr de récupérer la réponse de la dernière question
                 # Supprimez les doubles barres obliques
 
@@ -106,7 +106,7 @@ class QCMGenerateChain(LLMChain):
             regex=chaine_regex,
             output_keys=output_keys
         )
-        #on utilise le prompt choisit par l'utilisateur via l'interface web streamlit
+        #on utilise le prompt choisi par l'utilisateur via l'interface web streamlit
         contexte = st.session_state['contexte']
 
         fin_prompt = """

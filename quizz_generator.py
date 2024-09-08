@@ -6,7 +6,22 @@ import streamlit as st
 async def llm_call(qa_chain: QCMGenerateChain, text: str):
     
     print(f"llm call running...")
-    batch_examples = await asyncio.gather(qa_chain.aapply_and_parse(text))
+    # batch_examples = await asyncio.gather(qa_chain.aapply_and_parse(text))
+
+        # Supposons que qa_chain soit déjà initialisé avec un output_parser
+    output_parser = qa_chain.prompt.output_parser
+    
+    # Utilisation de qa_chain pour obtenir la sortie brute
+    raw_outputs = await asyncio.gather(qa_chain.aapply(text))
+
+       # Aplatir la liste si nécessaire
+    if isinstance(raw_outputs[0], list):
+        raw_outputs = [item for sublist in raw_outputs for item in sublist]
+    
+    
+    # Application manuelle du output_parser
+    batch_examples = [output_parser.parse(output['text']) for output in raw_outputs]
+
     print(f"llm call done.")
 
     return batch_examples

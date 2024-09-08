@@ -28,23 +28,29 @@ import streamlit as st
 #         # Password correct.
 #         return True
     
-def transform(input_list):
+def transform(input_dict):
+    import streamlit as st
     type_question = st.session_state['type_question']
     new_list = []
-    for item in input_list:
-        for key in item:
-            for i in range(1, 11):
-                if f'question{i}' in key:
-                    question_dict = {}
-                    question_dict['question'] = item[key]
-                    if (type_question == "Vrai/Faux"):
-                        question_dict['reponse'] = item[f'reponse{i}']
-                        question_dict['explication'] = item[f'explication{i}']
-                    else:
-                        question_dict['A'] = item[f'A_{i}']
-                        question_dict['B'] = item[f'B_{i}']
-                        question_dict['C'] = item[f'C_{i}']
-                        question_dict['D'] = item[f'D_{i}']
-                        question_dict['reponse'] = item[f'reponse{i}']
-                    new_list.append(question_dict)
-    return new_list      
+    # print(f"\nType de question: {type_question}")
+    # print(f"\nInput list: {input_dict}")
+    
+    for i in range(1, 11):
+        question_key = f'question{i}'
+        if question_key in input_dict:
+            question_dict = {}
+            question_dict['question'] = input_dict[question_key]
+            if type_question == "Vrai/Faux":
+                question_dict['reponse'] = input_dict.get(f'reponse{i}', 'N/A')
+                question_dict['explication'] = input_dict.get(f'explication{i}', 'N/A')
+            else:
+                question_dict['A'] = input_dict.get(f'A_{i}', 'N/A')
+                question_dict['B'] = input_dict.get(f'B_{i}', 'N/A')
+                question_dict['C'] = input_dict.get(f'C_{i}', 'N/A')
+                question_dict['D'] = input_dict.get(f'D_{i}', 'N/A')
+                question_dict['reponse'] = input_dict.get(f'reponse{i}', 'N/A')
+            new_list.append(question_dict)
+            # print(f"\nAppended question_dict: {question_dict}")
+    
+    # print(f"\nTransformed list: {new_list}")
+    return new_list
