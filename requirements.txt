@@ -8,3 +8,4 @@ google-cloud-bigquery
 google-auth
 db-dtypes
 langchain_community
+langchain_openai==0.1.23
